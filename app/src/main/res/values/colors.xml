@@ -1,9 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#3F51B5</color>
+    <!-- 更现代的主色调 -->
+    <color name="colorPrimary">#3949AB</color>
     <color name="colorPrimaryDark">#303F9F</color>
-    <color name="colorAccent">#FF4081</color>
-
+    <color name="colorAccent">#00BCD4</color>
+    
+    <!-- 按钮颜色 -->
+    <color name="buttonBackground">#FFFFFF</color>
+    <color name="buttonText">#3949AB</color>
+    <color name="buttonStroke">#E0E0E0</color>
+    
+    <!-- 背景颜色 -->
+    <color name="backgroundColor">#FAFAFA</color>
+    <color name="textPrimary">#212121</color>
+    <color name="textSecondary">#757575</color>
+    
     <!-- QRCode scanner color begin -->
     <color name="viewfinder_mask">#60000000</color>
     <color name="result_view">#B0000000</color>

@@ -6,6 +6,16 @@
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
+        <item name="android:windowBackground">@color/backgroundColor</item>
+        <item name="android:windowContentTransitions">true</item>
+    </style>
+
+    <!-- 自定义按钮样式 -->
+    <style name="ModernButton" parent="Widget.AppCompat.Button">
+        <item name="android:background">@drawable/rounded_button_compat</item>
+        <item name="android:textColor">@color/buttonText</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:minHeight">50dp</item>
     </style>
 
 </resources>

@@ -5,82 +5,141 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context="com.vone.vmq.MainActivity"
-
-    >
+    android:background="@color/backgroundColor"
+    tools:context="com.vone.vmq.MainActivity">
 
     <include layout="@layout/toolbar_main" />
 
-    <TextView
-        android:paddingTop="20dp"
-        android:paddingBottom="10dp"
-
-        android:id="@+id/txt_host"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-
-        android:baselineAligned="false"
-        android:text=" 通知地址：请扫码配置" />
-
-    <TextView
-        android:paddingBottom="20dp"
-        android:id="@+id/txt_key"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:text=" 通讯密钥：请扫码配置" />
-
-
-    <Button
-        android:id="@+id/btn_qrcode"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:onClick="startQrCode"
-        android:text="扫码配置" />
-    <Button
-        android:id="@+id/btn_input"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:onClick="doInput"
-        android:text="手动配置" />
-    <Button
-        android:id="@+id/btn_start"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:onClick="doStart"
-        android:text="检测心跳" />
-    <Button
-        android:id="@+id/btn_checkpush"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:onClick="checkPush"
-        android:text="检测监听" />
-
-    <Button
-        android:id="@+id/btn_clear_logs"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:onClick="clearLogs"
-        android:text="清除日志" />
+        android:orientation="vertical"
+        android:background="@drawable/card_background"
+        android:layout_margin="16dp"
+        android:padding="16dp">
 
-    <ScrollView
-        android:id="@+id/log_scroll_view"
+        <TextView
+            android:id="@+id/txt_host"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:textSize="15sp"
+            android:textColor="@color/textPrimary"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
+            android:text=" 通知地址：请扫码配置" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#E0E0E0" />
+
+        <TextView
+            android:id="@+id/txt_key"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:textSize="15sp"
+            android:textColor="@color/textPrimary"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
+            android:text=" 通讯密钥：请扫码配置" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+        
+        <Button
+            android:id="@+id/btn_qrcode"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_marginBottom="10dp"
+            android:background="@drawable/rounded_button_compat"
+            android:textColor="@color/buttonText"
+            android:onClick="startQrCode"
+            android:elevation="1dp"
+            android:text="扫码配置" />
+            
+        <Button
+            android:id="@+id/btn_input"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_marginBottom="10dp"
+            android:background="@drawable/rounded_button_compat"
+            android:textColor="@color/buttonText"
+            android:onClick="doInput"
+            android:elevation="1dp"
+            android:text="手动配置" />
+            
+        <Button
+            android:id="@+id/btn_start"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_marginBottom="10dp"
+            android:background="@drawable/rounded_button_compat"
+            android:textColor="@color/buttonText"
+            android:onClick="doStart"
+            android:elevation="1dp"
+            android:text="检测心跳" />
+            
+        <Button
+            android:id="@+id/btn_checkpush"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_marginBottom="10dp"
+            android:background="@drawable/rounded_button_compat"
+            android:textColor="@color/buttonText"
+            android:onClick="checkPush"
+            android:elevation="1dp"
+            android:text="检测监听" />
+            
+        <Button
+            android:id="@+id/btn_clear_logs"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_marginBottom="10dp"
+            android:background="@drawable/rounded_button_compat"
+            android:textColor="@color/buttonText"
+            android:onClick="clearLogs"
+            android:elevation="1dp"
+            android:text="清除日志" />
+    </LinearLayout>
+
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:layout_marginTop="16dp"
-        android:background="#F5F5F5">
-
+        android:layout_margin="16dp"
+        android:background="@drawable/card_background"
+        android:orientation="vertical">
+        
         <TextView
-            android:id="@+id/log_text_view"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="8dp"
-            android:text="日志输出:"
-            android:textColor="#333333" />
-    </ScrollView>
+            android:padding="10dp"
+            android:text="日志输出"
+            android:textColor="@color/textPrimary"
+            android:textSize="14sp" />
+            
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#E0E0E0" />
+            
+        <ScrollView
+            android:id="@+id/log_scroll_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <TextView
+                android:id="@+id/log_text_view"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="12dp"
+                android:textColor="@color/textSecondary"
+                android:textSize="13sp" />
+        </ScrollView>
+    </LinearLayout>
 
 </LinearLayout>
