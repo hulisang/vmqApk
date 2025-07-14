@@ -39,6 +39,7 @@ import okhttp3.Response;
 
 public class NeNotificationService2 extends NotificationListenerService {
     private static String TAG = "NeNotificationService2";
+    public static final String ACTION_LOG_UPDATE = "com.vone.vmq.LOG_UPDATE";
     private final Handler handler = new Handler(Looper.getMainLooper());
     private String host = "";
     private String key = "";
@@ -199,6 +200,7 @@ public class NeNotificationService2 extends NotificationListenerService {
                                         Toast.makeText(getApplicationContext(), "匹配成功：支付宝到账" + finalMoney + "元", Toast.LENGTH_LONG).show();
                                     }
                                 });
+                                sendBroadcastLog("匹配成功：支付宝到账 " + money + "元");
                                 try{
                                     appPush(2, Double.parseDouble(money));
                                 } catch (Exception e) {
@@ -238,6 +240,7 @@ public class NeNotificationService2 extends NotificationListenerService {
                                         Toast.makeText(getApplicationContext(), "匹配成功：微信到账" + finalMoney + "元", Toast.LENGTH_LONG).show();
                                     }
                                 });
+                                sendBroadcastLog("匹配成功：微信到账 " + money + "元");
                                 try {
                                     appPush(1, Double.parseDouble(money));
                                 } catch (Exception e) {
@@ -327,46 +330,38 @@ public class NeNotificationService2 extends NotificationListenerService {
      * 通知服务器收款到账
      */
     public void appPush(int type, double price) {
-        acquireWakeLock(this);
+        acquireWakeLock(getApplicationContext());
         SharedPreferences read = getSharedPreferences("vone", MODE_PRIVATE);
         host = read.getString("host", "");
         key = read.getString("key", "");
 
-        Log.d(TAG, "onResponse  push: 开始:" + type + "  " + price);
-
         String t = String.valueOf(new Date().getTime());
-        String sign = md5(type + "" + price + t + key);
-        final String url = "http://" + host + "/api/monitor/push?t=" + t + "&type=" + type + "&price=" + price + "&sign=" + sign;
-        Log.d(TAG, "onResponse  push: 开始:" + url);
-        Request request = new Request.Builder().url(url).method("GET", null).build();
+
+        String typeStr = type == 1 ? "wechat" : "alipay";
+        String sign = md5(String.valueOf(price) + typeStr + t + key);
+        final String url = "http://" + host + "/api/monitor/push?t=" + t + "&type=" + typeStr + "&price=" + price + "&sign=" + sign;
+
+        sendBroadcastLog("准备推送订单: " + url);
+        Request request = new Request.Builder().url(url).get().build();
         Call call = Utils.getOkHttpClient().newCall(request);
         call.enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
-                Log.d(TAG, "onResponse  push: 请求失败");
+                sendBroadcastLog("推送失败: " + e.getMessage());
                 foregroundPost(url + "&force_push=true");
                 releaseWakeLock();
             }
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
-                try {
-                    String responseBody = response.body().string();
-                    Log.d(TAG, "推送服务返回数据: " + responseBody);
-                    Log.d(TAG, "推送HTTP状态码: " + response.code());
-                    Log.d(TAG, "推送isSuccessful: " + response.isSuccessful());
-                } catch (Exception e) {
-                    Log.e(TAG, "推送响应解析异常: " + e.getMessage(), e);
-                    e.printStackTrace();
-                }
-                // 如果返回状态不是成功的。同样要回调
-                if (!response.isSuccessful()) {
-                    Log.d(TAG, "推送HTTP请求不成功，触发前台推送");
-                    foregroundPost(url + "&force_push=true");
+                if (response.isSuccessful()) {
+                    sendBroadcastLog("推送成功，服务器返回: " + response.body().string());
                 } else {
-                    Log.d(TAG, "推送服务请求成功");
+                    sendBroadcastLog("推送失败，服务器返回: " + response.body().string());
+                    foregroundPost(url + "&force_push=true");
                 }
                 releaseWakeLock();
+
             }
         });
     }
@@ -493,6 +488,12 @@ public class NeNotificationService2 extends NotificationListenerService {
             e.printStackTrace();
         }
         return "";
+    }
+
+    private void sendBroadcastLog(String logMessage) {
+        Intent intent = new Intent(ACTION_LOG_UPDATE);
+        intent.putExtra("log_message", logMessage);
+        sendBroadcast(intent);
     }
 
 }

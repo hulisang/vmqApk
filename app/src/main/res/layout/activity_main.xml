@@ -59,4 +59,28 @@
         android:onClick="checkPush"
         android:text="检测监听" />
 
+    <Button
+        android:id="@+id/btn_check_push"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="checkPush"
+        android:text="测试推送" />
+
+    <ScrollView
+        android:id="@+id/log_scroll_view"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginTop="16dp"
+        android:background="#F5F5F5">
+
+        <TextView
+            android:id="@+id/log_text_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="8dp"
+            android:text="日志输出:"
+            android:textColor="#333333" />
+    </ScrollView>
+
 </LinearLayout>

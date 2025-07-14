@@ -6,10 +6,12 @@ import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.ActivityNotFoundException;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
@@ -25,6 +27,7 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -49,6 +52,9 @@ public class MainActivity extends AppCompatActivity {
     private final Handler handler = new Handler(Looper.getMainLooper());
     private TextView txthost;
     private TextView txtkey;
+    private TextView logTextView;
+    private ScrollView logScrollView;
+    private LogBroadcastReceiver logBroadcastReceiver;
 
     private boolean isOk = false;
     private static String TAG = "MainActivity";
@@ -64,6 +70,8 @@ public class MainActivity extends AppCompatActivity {
 
         txthost = (TextView) findViewById(R.id.txt_host);
         txtkey = (TextView) findViewById(R.id.txt_key);
+        logTextView = (TextView) findViewById(R.id.log_text_view);
+        logScrollView = (ScrollView) findViewById(R.id.log_scroll_view);
 
         //检测通知使用权是否启用
         if (!isNotificationListenersEnabled()) {
@@ -86,7 +94,51 @@ public class MainActivity extends AppCompatActivity {
             txtkey.setText(" 通讯密钥：" + key);
             isOk = true;
         }
-        Toast.makeText(MainActivity.this, "v免签开源免费免签系统 v1.8.1", Toast.LENGTH_SHORT).show();
+        Toast.makeText(MainActivity.this, "v免签开源免费免签系统 v2.1", Toast.LENGTH_SHORT).show();
+
+        // 注册广播接收器
+        logBroadcastReceiver = new LogBroadcastReceiver();
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(NeNotificationService2.ACTION_LOG_UPDATE);
+        registerReceiver(logBroadcastReceiver, intentFilter);
+    }
+
+    // 在Activity销毁时取消注册
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (logBroadcastReceiver != null) {
+            unregisterReceiver(logBroadcastReceiver);
+        }
+    }
+
+    private void appendLog(final String message) {
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                logTextView.append("\n" + message);
+                // 自动滚动到底部
+                logScrollView.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        logScrollView.fullScroll(View.FOCUS_DOWN);
+                    }
+                });
+            }
+        });
+    }
+
+    // 广播接收器，用于接收来自Service的日志
+    private class LogBroadcastReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent != null && NeNotificationService2.ACTION_LOG_UPDATE.equals(intent.getAction())) {
+                String logMessage = intent.getStringExtra("log_message");
+                if (logMessage != null) {
+                    appendLog(logMessage);
+                }
+            }
+        }
     }
 
     //扫码配置
@@ -178,6 +230,7 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
+        appendLog("开始检测心跳...");
         String t = String.valueOf(new Date().getTime());
         String sign = md5(t + key);
 
@@ -185,11 +238,12 @@ public class MainActivity extends AppCompatActivity {
         Call call = Utils.getOkHttpClient().newCall(request);
         call.enqueue(new Callback() {
             @Override
-            public void onFailure(Call call, IOException e) {
+            public void onFailure(Call call, final IOException e) {
                 handler.post(new Runnable() {
                     @Override
                     public void run() {
                         Toast.makeText(MainActivity.this, "心跳状态错误，请检查配置是否正确!", Toast.LENGTH_SHORT).show();
+                        appendLog("心跳请求失败: " + e.getMessage());
                     }
                 });
             }
@@ -206,6 +260,7 @@ public class MainActivity extends AppCompatActivity {
                         @Override
                         public void run() {
                             try {
+                                appendLog("心跳返回: " + responseBody);
                                 Log.d(TAG, "心跳返回原始数据: " + responseBody);
                                 Log.d(TAG, "HTTP状态码: " + httpCode);
 
@@ -223,16 +278,19 @@ public class MainActivity extends AppCompatActivity {
                                 if (code == 200 || code == 0 || code == 1) {
                                     // 成功状态 (兼容code=1的情况)
                                     Toast.makeText(MainActivity.this, "心跳返回：" + msg, Toast.LENGTH_LONG).show();
+                                    appendLog("心跳成功: " + msg);
                                     Log.d(TAG, "心跳成功");
                                 } else {
                                     // 错误状态
                                     Toast.makeText(MainActivity.this, "心跳错误：" + msg, Toast.LENGTH_LONG).show();
+                                    appendLog("心跳失败: " + msg);
                                     Log.d(TAG, "心跳失败，code: " + code);
                                 }
                             } catch (Exception e) {
                                 Log.e(TAG, "心跳数据解析异常: " + e.getMessage(), e);
                                 e.printStackTrace();
                                 Toast.makeText(MainActivity.this, "心跳返回数据解析失败: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                                appendLog("心跳返回数据解析异常: " + e.getMessage());
                             }
                         }
                     });
@@ -242,6 +300,7 @@ public class MainActivity extends AppCompatActivity {
                         @Override
                         public void run() {
                             Toast.makeText(MainActivity.this, "网络响应读取失败", Toast.LENGTH_LONG).show();
+                            appendLog("心跳请求读取网络响应失败");
                         }
                     });
                 }
