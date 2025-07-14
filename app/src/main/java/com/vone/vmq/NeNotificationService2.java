@@ -95,7 +95,7 @@ public class NeNotificationService2 extends NotificationListenerService {
                     String t = String.valueOf(new Date().getTime());
                     String sign = md5(t + key);
 
-                    final String url = "http://" + host + "/appHeart?t=" + t + "&sign=" + sign;
+                    final String url = "http://" + host + "/api/monitor/heart?t=" + t + "&sign=" + sign;
                     Request request = new Request.Builder().url(url).method("GET", null).build();
                     Call call = Utils.getOkHttpClient().newCall(request);
                     call.enqueue(new Callback() {
@@ -110,12 +110,19 @@ public class NeNotificationService2 extends NotificationListenerService {
                         @Override
                         public void onResponse(Call call, Response response) throws IOException {
                             try {
-                                Log.d(TAG, "onResponse heard: " + response.body().string());
+                                String responseBody = response.body().string();
+                                Log.d(TAG, "心跳服务返回数据: " + responseBody);
+                                Log.d(TAG, "HTTP状态码: " + response.code());
+                                Log.d(TAG, "isSuccessful: " + response.isSuccessful());
                             } catch (Exception e) {
+                                Log.e(TAG, "心跳服务解析异常: " + e.getMessage(), e);
                                 e.printStackTrace();
                             }
                             if (!response.isSuccessful()) {
+                                Log.d(TAG, "HTTP请求不成功，触发前台心跳");
                                 foregroundHeart(url);
+                            } else {
+                                Log.d(TAG, "心跳服务请求成功");
                             }
                         }
                     });
@@ -186,6 +193,12 @@ public class NeNotificationService2 extends NotificationListenerService {
                             }
                             if (money != null) {
                                 Log.d(TAG, "onAccessibilityEvent: 匹配成功： 支付宝 到账 " + money);
+                                final String finalMoney = money;
+                                handler.post(new Runnable() {
+                                    public void run() {
+                                        Toast.makeText(getApplicationContext(), "匹配成功：支付宝到账" + finalMoney + "元", Toast.LENGTH_LONG).show();
+                                    }
+                                });
                                 try{
                                     appPush(2, Double.parseDouble(money));
                                 } catch (Exception e) {
@@ -219,6 +232,12 @@ public class NeNotificationService2 extends NotificationListenerService {
                             }
                             if (money != null) {
                                 Log.d(TAG, "onAccessibilityEvent: 匹配成功： 微信到账 " + money);
+                                final String finalMoney = money;
+                                handler.post(new Runnable() {
+                                    public void run() {
+                                        Toast.makeText(getApplicationContext(), "匹配成功：微信到账" + finalMoney + "元", Toast.LENGTH_LONG).show();
+                                    }
+                                });
                                 try {
                                     appPush(1, Double.parseDouble(money));
                                 } catch (Exception e) {
@@ -317,7 +336,7 @@ public class NeNotificationService2 extends NotificationListenerService {
 
         String t = String.valueOf(new Date().getTime());
         String sign = md5(type + "" + price + t + key);
-        final String url = "http://" + host + "/appPush?t=" + t + "&type=" + type + "&price=" + price + "&sign=" + sign;
+        final String url = "http://" + host + "/api/monitor/push?t=" + t + "&type=" + type + "&price=" + price + "&sign=" + sign;
         Log.d(TAG, "onResponse  push: 开始:" + url);
         Request request = new Request.Builder().url(url).method("GET", null).build();
         Call call = Utils.getOkHttpClient().newCall(request);
@@ -332,13 +351,20 @@ public class NeNotificationService2 extends NotificationListenerService {
             @Override
             public void onResponse(Call call, Response response) throws IOException {
                 try {
-                    Log.d(TAG, "onResponse  push: " + response.body().string());
+                    String responseBody = response.body().string();
+                    Log.d(TAG, "推送服务返回数据: " + responseBody);
+                    Log.d(TAG, "推送HTTP状态码: " + response.code());
+                    Log.d(TAG, "推送isSuccessful: " + response.isSuccessful());
                 } catch (Exception e) {
+                    Log.e(TAG, "推送响应解析异常: " + e.getMessage(), e);
                     e.printStackTrace();
                 }
                 // 如果返回状态不是成功的。同样要回调
                 if (!response.isSuccessful()) {
+                    Log.d(TAG, "推送HTTP请求不成功，触发前台推送");
                     foregroundPost(url + "&force_push=true");
+                } else {
+                    Log.d(TAG, "推送服务请求成功");
                 }
                 releaseWakeLock();
             }

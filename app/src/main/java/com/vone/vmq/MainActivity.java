@@ -32,6 +32,8 @@ import com.google.zxing.activity.CaptureActivity;
 import com.vone.qrcode.R;
 import com.vone.vmq.util.Constant;
 
+import org.json.JSONObject;
+
 import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -126,7 +128,7 @@ public class MainActivity extends AppCompatActivity {
                 String t = String.valueOf(new Date().getTime());
                 String sign = md5(t + tmp[1]);
 
-                Request request = new Request.Builder().url("http://" + tmp[0] + "/appHeart?t=" + t + "&sign=" + sign).method("GET", null).build();
+                Request request = new Request.Builder().url("http://" + tmp[0] + "/api/monitor/heart?t=" + t + "&sign=" + sign).method("GET", null).build();
                 Call call = Utils.getOkHttpClient().newCall(request);
                 call.enqueue(new Callback() {
                     @Override
@@ -137,8 +139,11 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onResponse(Call call, Response response) throws IOException {
                         try {
-                            Log.d(TAG, "onResponse: " + response.body().string());
+                            String responseBody = response.body().string();
+                            Log.d(TAG, "配置测试心跳返回: " + responseBody);
+                            Log.d(TAG, "配置测试HTTP状态码: " + response.code());
                         } catch (Exception e) {
+                            Log.e(TAG, "配置测试心跳异常: " + e.getMessage(), e);
                             e.printStackTrace();
                         }
                         isOk = true;
@@ -176,7 +181,7 @@ public class MainActivity extends AppCompatActivity {
         String t = String.valueOf(new Date().getTime());
         String sign = md5(t + key);
 
-        Request request = new Request.Builder().url("http://" + host + "/appHeart?t=" + t + "&sign=" + sign).method("GET", null).build();
+        Request request = new Request.Builder().url("http://" + host + "/api/monitor/heart?t=" + t + "&sign=" + sign).method("GET", null).build();
         Call call = Utils.getOkHttpClient().newCall(request);
         call.enqueue(new Callback() {
             @Override
@@ -191,17 +196,55 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onResponse(Call call, final Response response) throws IOException {
-                handler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            // 为什么每一个response都 try catch了，因为response.body有可能为空
-                            Toast.makeText(MainActivity.this, "心跳返回：" + response.body().string(), Toast.LENGTH_LONG).show();
-                        } catch (Exception e) {
-                            e.printStackTrace();
+                try {
+                    // 在网络线程中读取响应体
+                    final String responseBody = response.body().string();
+                    final int httpCode = response.code();
+
+                    // 切换到UI线程处理结果
+                    handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                Log.d(TAG, "心跳返回原始数据: " + responseBody);
+                                Log.d(TAG, "HTTP状态码: " + httpCode);
+
+                                JSONObject jsonObject = new JSONObject(responseBody);
+                                Log.d(TAG, "JSON解析成功");
+
+                                // 兼容新旧两种返回格式
+                                // 新格式：{"code": 200, "msg": "消息", "data": null}
+                                // 旧格式：{"code": 0, "msg": "消息"}
+                                int code = jsonObject.getInt("code");
+                                String msg = jsonObject.getString("msg");
+
+                                Log.d(TAG, "解析到的code: " + code + ", msg: " + msg);
+
+                                if (code == 200 || code == 0 || code == 1) {
+                                    // 成功状态 (兼容code=1的情况)
+                                    Toast.makeText(MainActivity.this, "心跳返回：" + msg, Toast.LENGTH_LONG).show();
+                                    Log.d(TAG, "心跳成功");
+                                } else {
+                                    // 错误状态
+                                    Toast.makeText(MainActivity.this, "心跳错误：" + msg, Toast.LENGTH_LONG).show();
+                                    Log.d(TAG, "心跳失败，code: " + code);
+                                }
+                            } catch (Exception e) {
+                                Log.e(TAG, "心跳数据解析异常: " + e.getMessage(), e);
+                                e.printStackTrace();
+                                Toast.makeText(MainActivity.this, "心跳返回数据解析失败: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                            }
                         }
-                    }
-                });
+                    });
+                } catch (Exception e) {
+                    Log.e(TAG, "网络响应读取异常: " + e.getMessage(), e);
+                    handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(MainActivity.this, "网络响应读取失败", Toast.LENGTH_LONG).show();
+                        }
+                    });
+                }
             }
         });
     }
@@ -335,7 +378,7 @@ public class MainActivity extends AppCompatActivity {
             String t = String.valueOf(new Date().getTime());
             String sign = md5(t + tmp[1]);
 
-            Request request = new Request.Builder().url("http://" + tmp[0] + "/appHeart?t=" + t + "&sign=" + sign).method("GET", null).build();
+            Request request = new Request.Builder().url("http://" + tmp[0] + "/api/monitor/heart?t=" + t + "&sign=" + sign).method("GET", null).build();
             Call call = Utils.getOkHttpClient().newCall(request);
             call.enqueue(new Callback() {
                 @Override
@@ -346,8 +389,11 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onResponse(Call call, Response response) throws IOException {
                     try {
-                        Log.d(TAG, "onResponse: " + response.body().string());
+                        String responseBody = response.body().string();
+                        Log.d(TAG, "扫码配置心跳返回: " + responseBody);
+                        Log.d(TAG, "扫码配置HTTP状态码: " + response.code());
                     } catch (Exception e) {
+                        Log.e(TAG, "扫码配置心跳异常: " + e.getMessage(), e);
                         e.printStackTrace();
                     }
                     isOk = true;
