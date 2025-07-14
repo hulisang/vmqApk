@@ -60,11 +60,11 @@
         android:text="检测监听" />
 
     <Button
-        android:id="@+id/btn_check_push"
+        android:id="@+id/btn_clear_logs"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:onClick="checkPush"
-        android:text="测试推送" />
+        android:onClick="clearLogs"
+        android:text="清除日志" />
 
     <ScrollView
         android:id="@+id/log_scroll_view"

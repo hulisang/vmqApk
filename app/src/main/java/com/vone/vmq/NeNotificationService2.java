@@ -337,9 +337,8 @@ public class NeNotificationService2 extends NotificationListenerService {
 
         String t = String.valueOf(new Date().getTime());
 
-        String typeStr = type == 1 ? "wechat" : "alipay";
-        String sign = md5(String.valueOf(price) + typeStr + t + key);
-        final String url = "http://" + host + "/api/monitor/push?t=" + t + "&type=" + typeStr + "&price=" + price + "&sign=" + sign;
+        String sign = md5(type + "" + price + t + key);
+        final String url = "http://" + host + "/api/monitor/push?t=" + t + "&type=" + type + "&price=" + price + "&sign=" + sign;
 
         sendBroadcastLog("准备推送订单: " + url);
         Request request = new Request.Builder().url(url).get().build();

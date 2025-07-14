@@ -308,7 +308,10 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    //检测监听
+    public void clearLogs(View view) {
+        logTextView.setText("日志输出:");
+    }
+
     public void checkPush(View v) {
         Notification mNotification;
         NotificationManager mNotificationManager;
