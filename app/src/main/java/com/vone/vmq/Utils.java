@@ -30,6 +30,9 @@ import java.util.concurrent.TimeUnit;
 
 import okhttp3.ConnectionPool;
 import okhttp3.OkHttpClient;
+import okhttp3.Interceptor;
+import okhttp3.Request;
+import okhttp3.Response;
 
 class Utils {
     public final static String GET_MESSAGE_KEY = "get_message_key";
@@ -45,10 +48,14 @@ class Utils {
             synchronized (Utils.class) {
                 if (okHttpClient == null) {
                     okHttpClient = new OkHttpClient.Builder()
-                            .connectTimeout(10, TimeUnit.SECONDS)
-                            .readTimeout(10, TimeUnit.SECONDS)
-                            .writeTimeout(10, TimeUnit.SECONDS)
-                            .connectionPool(new ConnectionPool(0, 5, TimeUnit.SECONDS))
+                            .connectTimeout(15, TimeUnit.SECONDS)
+                            .readTimeout(30, TimeUnit.SECONDS)
+                            .writeTimeout(30, TimeUnit.SECONDS)
+                            .callTimeout(60, TimeUnit.SECONDS)
+                            .connectionPool(new ConnectionPool(5, 5, TimeUnit.MINUTES))
+                            .retryOnConnectionFailure(true)
+                            .addInterceptor(new RetryInterceptor())
+                            .addInterceptor(new LoggingInterceptor())
                             .build();
                 }
             }
@@ -218,10 +225,139 @@ class Utils {
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setPriority(priority)
                 .setAutoCancel(true);
-        PendingIntent pendingIntent = PendingIntent.getActivity(context, id
-                , intent, PendingIntent.FLAG_CANCEL_CURRENT);
+        int flags = PendingIntent.FLAG_CANCEL_CURRENT;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+            flags |= PendingIntent.FLAG_IMMUTABLE;
+        }
+        PendingIntent pendingIntent = PendingIntent.getActivity(context, id, intent, flags);
         notificationBuild.setContentIntent(pendingIntent);
         // 正式发出通知
         manager.notify(id, notificationBuild.build());
+    }
+
+    /**
+     * 发送日志广播
+     * 用于将日志消息发送到MainActivity显示
+     */
+    public static void sendLogBroadcast(Context context, String message) {
+        if (context == null || message == null) {
+            return;
+        }
+        
+        try {
+            Intent intent = new Intent(NeNotificationService2.ACTION_LOG_UPDATE);
+            intent.putExtra("log_message", message);
+            context.sendBroadcast(intent);
+        } catch (Exception e) {
+            android.util.Log.w("Utils", "发送日志广播失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 重试拦截器 - 适配Android 14+的网络请求重试机制
+     */
+    private static class RetryInterceptor implements Interceptor {
+        private static final int MAX_RETRY_COUNT = 3;
+        private static final String TAG = "RetryInterceptor";
+
+        @Override
+        public Response intercept(Chain chain) throws IOException {
+            Request request = chain.request();
+            Response response = null;
+            IOException lastException = null;
+            
+            for (int i = 0; i <= MAX_RETRY_COUNT; i++) {
+                try {
+                    response = chain.proceed(request);
+                    
+                    // 如果响应成功，直接返回
+                    if (response.isSuccessful()) {
+                        return response;
+                    }
+                    
+                    // 对于服务器错误（5xx）进行重试
+                    if (response.code() >= 500 && i < MAX_RETRY_COUNT) {
+                        android.util.Log.w(TAG, "服务器错误 " + response.code() + "，第 " + (i + 1) + " 次重试");
+                        response.close();
+                        
+                        // 指数退避策略
+                        try {
+                            Thread.sleep((long) Math.pow(2, i) * 1000);
+                        } catch (InterruptedException e) {
+                            Thread.currentThread().interrupt();
+                            throw new IOException("重试被中断", e);
+                        }
+                        continue;
+                    }
+                    
+                    return response;
+                    
+                } catch (IOException e) {
+                    lastException = e;
+                    android.util.Log.w(TAG, "网络请求失败，第 " + (i + 1) + " 次重试: " + e.getMessage());
+                    
+                    if (response != null) {
+                        response.close();
+                    }
+                    
+                    // 最后一次重试失败，抛出异常
+                    if (i == MAX_RETRY_COUNT) {
+                        throw e;
+                    }
+                    
+                    // 指数退避策略
+                    try {
+                        Thread.sleep((long) Math.pow(2, i) * 1000);
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        throw new IOException("重试被中断", ie);
+                    }
+                }
+            }
+            
+            if (lastException != null) {
+                throw lastException;
+            }
+            
+            return response;
+        }
+    }
+
+    /**
+     * 日志拦截器 - 记录网络请求详情，便于调试
+     */
+    private static class LoggingInterceptor implements Interceptor {
+        private static final String TAG = "NetworkRequest";
+
+        @Override
+        public Response intercept(Chain chain) throws IOException {
+            Request request = chain.request();
+            long startTime = System.currentTimeMillis();
+            
+            android.util.Log.d(TAG, "发送请求: " + request.url());
+            android.util.Log.d(TAG, "请求方法: " + request.method());
+            
+            Response response;
+            boolean success = false;
+            try {
+                response = chain.proceed(request);
+                success = response.isSuccessful();
+            } catch (Exception e) {
+                android.util.Log.e(TAG, "请求失败: " + request.url() + " - " + e.getMessage());
+                throw e;
+            }
+            
+            long endTime = System.currentTimeMillis();
+            long duration = endTime - startTime;
+            
+            android.util.Log.d(TAG, "收到响应: " + response.code() + " " + response.message() + 
+                    " (" + duration + "ms)");
+            
+            // 集成性能监控 - 记录网络请求性能
+            // 注意：这里需要Context，但在静态拦截器中无法直接获取
+            // 在实际使用中，可以通过其他方式传递Context或使用Application Context
+            
+            return response;
+        }
     }
 }

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+  <!-- Material You 单色图标 - 用于主题化图标 -->
+  <group android:scaleX="2.4"
+      android:scaleY="2.4"
+      android:translateX="25.2"
+      android:translateY="25.2">
+    <!-- 盾牌轮廓 -->
+    <path
+        android:fillColor="#000000"
+        android:pathData="M12,1L3,5v6c0,5.55 3.84,10.74 9,12 5.16,-1.26 9,-6.45 9,-12L21,5l-9,-4z"/>
+    <!-- 对勾 - 使用白色以形成对比 -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M10,17l-4,-4 1.41,-1.41L10,14.17l6.59,-6.59L18,9l-8,8z"/>
+  </group>
+</vector>

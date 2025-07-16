@@ -51,14 +51,11 @@ final class DecodeHandler extends Handler {
 
   @Override
   public void handleMessage(Message message) {
-    switch (message.what) {
-      case R.id.decode:
+    if (message.what == R.id.decode) {
         //Log.d(TAG, "Got decode message");
         decode((byte[]) message.obj, message.arg1, message.arg2);
-        break;
-      case R.id.quit:
+    } else if (message.what == R.id.quit) {
         Looper.myLooper().quit();
-        break;
     }
   }
 

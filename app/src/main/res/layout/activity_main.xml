@@ -10,136 +10,181 @@
 
     <include layout="@layout/toolbar_main" />
 
-    <LinearLayout
+    <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:background="@drawable/card_background"
         android:layout_margin="16dp"
-        android:padding="16dp">
+        app:cardCornerRadius="12dp"
+        app:cardElevation="2dp"
+        app:strokeWidth="0dp"
+        style="@style/Widget.Material3.CardView.Filled">
 
-        <TextView
-            android:id="@+id/txt_host"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:textSize="15sp"
-            android:textColor="@color/textPrimary"
-            android:paddingTop="8dp"
-            android:paddingBottom="8dp"
-            android:text=" 通知地址：请扫码配置" />
-
-        <View
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="#E0E0E0" />
-
-        <TextView
-            android:id="@+id/txt_key"
-            android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:textSize="15sp"
-            android:textColor="@color/textPrimary"
-            android:paddingTop="8dp"
-            android:paddingBottom="8dp"
-            android:text=" 通讯密钥：请扫码配置" />
-    </LinearLayout>
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:id="@+id/txt_host"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="15sp"
+                android:textColor="?attr/colorOnSurface"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"
+                android:text=" 通知地址：请扫码配置" />
+
+            <com.google.android.material.divider.MaterialDivider
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginVertical="4dp" />
+
+            <TextView
+                android:id="@+id/txt_key"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="15sp"
+                android:textColor="?attr/colorOnSurface"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"
+                android:text=" 通讯密钥：请扫码配置" />
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:padding="16dp"
+        android:paddingBottom="8dp">
         
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_qrcode"
             android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:layout_marginBottom="10dp"
-            android:background="@drawable/rounded_button_compat"
-            android:textColor="@color/buttonText"
+            android:layout_height="48dp"
+            android:layout_marginBottom="8dp"
             android:onClick="startQrCode"
-            android:elevation="1dp"
-            android:text="扫码配置" />
+            android:text="扫码配置"
+            android:textSize="15sp"
+            app:icon="@drawable/ic_qr_code_scanner"
+            app:iconGravity="textStart"
+            app:iconPadding="8dp"
+            style="@style/Widget.Material3.Button.Icon" />
             
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_input"
             android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:layout_marginBottom="10dp"
-            android:background="@drawable/rounded_button_compat"
-            android:textColor="@color/buttonText"
+            android:layout_height="48dp"
+            android:layout_marginBottom="8dp"
             android:onClick="doInput"
-            android:elevation="1dp"
-            android:text="手动配置" />
+            android:text="手动配置"
+            android:textSize="15sp"
+            app:icon="@drawable/ic_edit"
+            app:iconGravity="textStart"
+            app:iconPadding="8dp"
+            style="@style/Widget.Material3.Button.Icon" />
             
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_start"
             android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:layout_marginBottom="10dp"
-            android:background="@drawable/rounded_button_compat"
-            android:textColor="@color/buttonText"
+            android:layout_height="48dp"
+            android:layout_marginBottom="8dp"
             android:onClick="doStart"
-            android:elevation="1dp"
-            android:text="检测心跳" />
+            android:text="检测心跳"
+            android:textSize="15sp"
+            app:icon="@drawable/ic_favorite"
+            app:iconGravity="textStart"
+            app:iconPadding="8dp"
+            style="@style/Widget.Material3.Button.Icon" />
             
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_checkpush"
             android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:layout_marginBottom="10dp"
-            android:background="@drawable/rounded_button_compat"
-            android:textColor="@color/buttonText"
+            android:layout_height="48dp"
+            android:layout_marginBottom="8dp"
             android:onClick="checkPush"
-            android:elevation="1dp"
-            android:text="检测监听" />
+            android:text="检测监听"
+            android:textSize="15sp"
+            app:icon="@drawable/ic_notifications"
+            app:iconGravity="textStart"
+            app:iconPadding="8dp"
+            style="@style/Widget.Material3.Button.OutlinedButton" />
             
-        <Button
-            android:id="@+id/btn_clear_logs"
-            android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:layout_marginBottom="10dp"
-            android:background="@drawable/rounded_button_compat"
-            android:textColor="@color/buttonText"
-            android:onClick="clearLogs"
-            android:elevation="1dp"
-            android:text="清除日志" />
+
     </LinearLayout>
 
-    <LinearLayout
+    <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
         android:layout_margin="16dp"
-        android:background="@drawable/card_background"
-        android:orientation="vertical">
-        
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:padding="10dp"
-            android:text="日志输出"
-            android:textColor="@color/textPrimary"
-            android:textSize="14sp" />
-            
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="#E0E0E0" />
-            
-        <ScrollView
-            android:id="@+id/log_scroll_view"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent">
+        app:cardCornerRadius="12dp"
+        app:cardElevation="2dp"
+        app:strokeWidth="0dp"
+        style="@style/Widget.Material3.CardView.Outlined">
 
-            <TextView
-                android:id="@+id/log_text_view"
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+            
+            <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:padding="12dp"
-                android:textColor="@color/textSecondary"
-                android:textSize="13sp" />
-        </ScrollView>
-    </LinearLayout>
+                android:padding="16dp">
+                
+                <TextView
+                    android:id="@+id/log_title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentStart="true"
+                    android:layout_centerVertical="true"
+                    android:text="日志输出"
+                    android:textColor="?attr/colorOnSurface"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+                    
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_clear_logs_inline"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true"
+                    android:onClick="clearLogs"
+                    android:text="清除"
+                    android:textSize="12sp"
+                    android:minWidth="0dp"
+                    android:minHeight="32dp"
+                    android:paddingHorizontal="12dp"
+                    android:paddingVertical="6dp"
+                    app:icon="@drawable/ic_clear"
+                    app:iconSize="16dp"
+                    app:iconGravity="textStart"
+                    app:iconPadding="4dp"
+                    style="@style/Widget.Material3.Button.TextButton" />
+            </RelativeLayout>
+                
+            <com.google.android.material.divider.MaterialDivider
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+                
+            <ScrollView
+                android:id="@+id/log_scroll_view"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:padding="4dp">
+
+                <TextView
+                    android:id="@+id/log_text_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="12dp"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:textSize="13sp"
+                    android:fontFamily="monospace" />
+            </ScrollView>
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
 
 </LinearLayout>

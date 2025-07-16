@@ -14,7 +14,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.SystemClock;
-import android.support.annotation.RequiresApi;
+import androidx.annotation.RequiresApi;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -52,10 +52,14 @@ public class ForegroundServer extends Service {
     public void onCreate() {
         super.onCreate();
         enterTime = SystemClock.elapsedRealtime();
+        
+        // Android 8.0+ 需要前台服务
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             setForegroundService();
         }
+        
         registerFinishBroad();
+        Log.d("ForegroundServer", "前台服务已创建");
     }
 
     @Override
@@ -206,14 +210,26 @@ public class ForegroundServer extends Service {
 
         Intent notificationIntent = new Intent(getApplicationContext(), StartReceive.class);
         notificationIntent.setAction(StartReceive.TRY_CLOSE_ACTIVITY_ACTION);
+        
+        // 适配Android 12+的PendingIntent要求
+        int flags = 0;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            flags = PendingIntent.FLAG_IMMUTABLE;
+        }
         notification.contentIntent = PendingIntent.getBroadcast(getApplicationContext(),
-                0, notificationIntent, 0);
+                0, notificationIntent, flags);
         return notification;
     }
 
     private void registerFinishBroad() {
-        registerReceiver(finishServiceBroadcast,
-                new IntentFilter(Constant.FINISH_FOREGROUND_SERVICE));
+        IntentFilter intentFilter = new IntentFilter(Constant.FINISH_FOREGROUND_SERVICE);
+        
+        // 适配Android 13+的BroadcastReceiver注册要求
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(finishServiceBroadcast, intentFilter, Context.RECEIVER_NOT_EXPORTED);
+        } else {
+            registerReceiver(finishServiceBroadcast, intentFilter);
+        }
     }
 
     private void unregisterFinishBroad() {

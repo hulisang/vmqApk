@@ -18,6 +18,10 @@ public class App extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+        
+        // 初始化Material You主题系统
+        ThemeUtils.initializeTheme(this);
+        
         Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
             @Override
             public void uncaughtException(Thread thread, Throwable throwable) {

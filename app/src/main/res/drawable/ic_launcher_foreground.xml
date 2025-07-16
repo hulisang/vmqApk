@@ -3,14 +3,26 @@
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
-    android:viewportHeight="108"
-    android:tint="#FFFFFF">
-  <group android:scaleX="2.2446"
-      android:scaleY="2.2446"
-      android:translateX="27.0648"
-      android:translateY="27.0648">
+    android:viewportHeight="108">
+  <!-- Material You 风格的前景图标 -->
+  <group android:scaleX="2.4"
+      android:scaleY="2.4"
+      android:translateX="25.2"
+      android:translateY="25.2">
+    <!-- 盾牌形状代表安全监控 -->
     <path
-        android:fillColor="@android:color/white"
-        android:pathData="M12,1L3,5v6c0,5.55 3.84,10.74 9,12 5.16,-1.26 9,-6.45 9,-12L21,5l-9,-4zM10,17l-4,-4 1.41,-1.41L10,14.17l6.59,-6.59L18,9l-8,8z"/>
+        android:fillColor="?attr/colorOnPrimary"
+        android:pathData="M12,1L3,5v6c0,5.55 3.84,10.74 9,12 5.16,-1.26 9,-6.45 9,-12L21,5l-9,-4z"/>
+    <!-- 对勾表示验证通过 -->
+    <path
+        android:fillColor="?attr/colorPrimary"
+        android:pathData="M10,17l-4,-4 1.41,-1.41L10,14.17l6.59,-6.59L18,9l-8,8z"/>
+  </group>
+  <!-- 添加微妙的装饰元素 -->
+  <group android:translateX="54" android:translateY="54">
+    <path
+        android:fillColor="?attr/colorOnPrimary"
+        android:pathData="M-2,-2 L2,-2 L2,2 L-2,2 Z"
+        android:fillAlpha="0.6"/>
   </group>
 </vector> 

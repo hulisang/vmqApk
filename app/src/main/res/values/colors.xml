@@ -1,19 +1,60 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- 更现代的主色调 -->
-    <color name="colorPrimary">#3949AB</color>
-    <color name="colorPrimaryDark">#303F9F</color>
-    <color name="colorAccent">#00BCD4</color>
+    <!-- Material 3 Light Theme Colors -->
+    <!-- Primary colors -->
+    <color name="md_theme_light_primary">#6750A4</color>
+    <color name="md_theme_light_onPrimary">#FFFFFF</color>
+    <color name="md_theme_light_primaryContainer">#EADDFF</color>
+    <color name="md_theme_light_onPrimaryContainer">#21005D</color>
     
-    <!-- 按钮颜色 -->
-    <color name="buttonBackground">#FFFFFF</color>
-    <color name="buttonText">#3949AB</color>
-    <color name="buttonStroke">#E0E0E0</color>
+    <!-- Secondary colors -->
+    <color name="md_theme_light_secondary">#625B71</color>
+    <color name="md_theme_light_onSecondary">#FFFFFF</color>
+    <color name="md_theme_light_secondaryContainer">#E8DEF8</color>
+    <color name="md_theme_light_onSecondaryContainer">#1D192B</color>
     
-    <!-- 背景颜色 -->
-    <color name="backgroundColor">#FAFAFA</color>
-    <color name="textPrimary">#212121</color>
-    <color name="textSecondary">#757575</color>
+    <!-- Tertiary colors -->
+    <color name="md_theme_light_tertiary">#7D5260</color>
+    <color name="md_theme_light_onTertiary">#FFFFFF</color>
+    <color name="md_theme_light_tertiaryContainer">#FFD8E4</color>
+    <color name="md_theme_light_onTertiaryContainer">#31111D</color>
+    
+    <!-- Error colors -->
+    <color name="md_theme_light_error">#BA1A1A</color>
+    <color name="md_theme_light_errorContainer">#FFDAD6</color>
+    <color name="md_theme_light_onError">#FFFFFF</color>
+    <color name="md_theme_light_onErrorContainer">#410002</color>
+    
+    <!-- Background colors -->
+    <color name="md_theme_light_background">#FFFBFE</color>
+    <color name="md_theme_light_onBackground">#1C1B1F</color>
+    <color name="md_theme_light_surface">#FFFBFE</color>
+    <color name="md_theme_light_onSurface">#1C1B1F</color>
+    
+    <!-- Surface variant colors -->
+    <color name="md_theme_light_surfaceVariant">#E7E0EC</color>
+    <color name="md_theme_light_onSurfaceVariant">#49454F</color>
+    <color name="md_theme_light_outline">#79747E</color>
+    <color name="md_theme_light_inverseOnSurface">#F4EFF4</color>
+    <color name="md_theme_light_inverseSurface">#313033</color>
+    <color name="md_theme_light_inversePrimary">#D0BCFF</color>
+    
+    <!-- Additional surface colors -->
+    <color name="md_theme_light_shadow">#000000</color>
+    <color name="md_theme_light_surfaceTint">#6750A4</color>
+    <color name="md_theme_light_outlineVariant">#CAC4D0</color>
+    <color name="md_theme_light_scrim">#000000</color>
+    
+    <!-- Legacy colors for backward compatibility -->
+    <color name="colorPrimary">@color/md_theme_light_primary</color>
+    <color name="colorPrimaryDark">@color/md_theme_light_primary</color>
+    <color name="colorAccent">@color/md_theme_light_secondary</color>
+    <color name="backgroundColor">@color/md_theme_light_background</color>
+    <color name="textPrimary">@color/md_theme_light_onSurface</color>
+    <color name="textSecondary">@color/md_theme_light_onSurfaceVariant</color>
+    <color name="buttonText">@color/md_theme_light_onPrimary</color>
+    <color name="buttonBackground">@color/md_theme_light_primary</color>
+    <color name="buttonStroke">@color/md_theme_light_outline</color>
     
     <!-- QRCode scanner color begin -->
     <color name="viewfinder_mask">#60000000</color>

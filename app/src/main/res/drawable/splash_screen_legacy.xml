@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 背景层 -->
+    <item android:drawable="?attr/colorSurface" />
+    
+    <!-- 居中的应用图标 -->
+    <item android:gravity="center">
+        <bitmap
+            android:src="@drawable/ic_splash_screen"
+            android:gravity="center" />
+    </item>
+</layer-list>

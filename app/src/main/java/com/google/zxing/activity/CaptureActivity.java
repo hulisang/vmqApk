@@ -11,7 +11,8 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Vibrator;
-import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
+import androidx.appcompat.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.view.SurfaceHolder;
 import android.view.SurfaceHolder.Callback;
@@ -77,28 +78,41 @@ public class CaptureActivity extends AppCompatActivity implements Callback {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_scanner);
-        //ViewUtil.addTopView(getApplicationContext(), this, R.string.scan_card);
-        CameraManager.init(getApplication());
-        viewfinderView = (ViewfinderView) findViewById(R.id.viewfinder_content);
-        back = (ImageButton) findViewById(R.id.btn_back);
-        back.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                finish();
+        
+        try {
+            setContentView(R.layout.activity_scanner);
+            //ViewUtil.addTopView(getApplicationContext(), this, R.string.scan_card);
+            CameraManager.init(getApplication());
+            
+            viewfinderView = (ViewfinderView) findViewById(R.id.viewfinder_content);
+            back = (ImageButton) findViewById(R.id.btn_back);
+            back.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    finish();
+                }
+            });
+
+            btnFlash = (ImageButton) findViewById(R.id.btn_flash);
+            btnFlash.setOnClickListener(flashListener);
+
+            btnAlbum = (Button) findViewById(R.id.btn_album);
+            btnAlbum.setOnClickListener(albumOnClick);
+
+            hasSurface = false;
+            inactivityTimer = new InactivityTimer(this);
+            
+            // 检查关键组件是否初始化成功
+            if (viewfinderView == null) {
+                Log.e("CaptureActivity", "ViewfinderView初始化失败");
+                showCameraError("扫码界面初始化失败");
+                return;
             }
-        });
-
-        btnFlash = (ImageButton) findViewById(R.id.btn_flash);
-        btnFlash.setOnClickListener(flashListener);
-
-        btnAlbum = (Button) findViewById(R.id.btn_album);
-        btnAlbum.setOnClickListener(albumOnClick);
-
-//		cancelScanButton = (Button) this.findViewById(R.id.btn_cancel_scan);
-        hasSurface = false;
-        inactivityTimer = new InactivityTimer(this);
-
+            
+        } catch (Exception e) {
+            Log.e("CaptureActivity", "Activity创建异常: " + e.getMessage(), e);
+            showCameraError("扫码界面启动失败");
+        }
     }
 
     private View.OnClickListener albumOnClick = new View.OnClickListener() {
@@ -264,14 +278,32 @@ public class CaptureActivity extends AppCompatActivity implements Callback {
         try {
             CameraManager.get().openDriver(surfaceHolder);
         } catch (IOException ioe) {
+            Log.e("CaptureActivity", "相机初始化IO异常: " + ioe.getMessage(), ioe);
+            showCameraError("相机初始化失败，请检查相机权限");
             return;
         } catch (RuntimeException e) {
+            Log.e("CaptureActivity", "相机初始化运行时异常: " + e.getMessage(), e);
+            showCameraError("相机被其他应用占用或硬件异常");
+            return;
+        } catch (Exception e) {
+            Log.e("CaptureActivity", "相机初始化未知异常: " + e.getMessage(), e);
+            showCameraError("相机初始化异常");
             return;
         }
         if (handler == null) {
             handler = new CaptureActivityHandler(this, decodeFormats,
                     characterSet);
         }
+    }
+
+    private void showCameraError(String message) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(CaptureActivity.this, message, Toast.LENGTH_LONG).show();
+                finish();
+            }
+        });
     }
 
     @Override

@@ -4,11 +4,18 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
+  <!-- Material You 适配的背景 - 使用主题颜色 -->
   <path
-      android:fillColor="#3949AB"
+      android:fillColor="?attr/colorPrimary"
       android:pathData="M0,0h108v108h-108z"/>
+  <!-- 添加渐变效果以增强视觉层次 -->
   <path
-      android:fillColor="#304FFE"
+      android:fillColor="?attr/colorPrimaryContainer"
       android:pathData="M0,54h108v54h-108z"
-      android:fillAlpha="0.3"/>
+      android:fillAlpha="0.4"/>
+  <!-- 添加微妙的几何装饰 -->
+  <path
+      android:fillColor="?attr/colorOnPrimary"
+      android:pathData="M54,0 L108,54 L54,108 L0,54 Z"
+      android:fillAlpha="0.1"/>
 </vector> 

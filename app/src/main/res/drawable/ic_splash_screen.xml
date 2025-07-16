@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="192dp"
+    android:height="192dp"
+    android:viewportWidth="192"
+    android:viewportHeight="192">
+  <!-- 启动画面图标 - 符合Android 12+ Splash Screen API规范的192dp尺寸 -->
+  <group android:scaleX="4.0"
+      android:scaleY="4.0"
+      android:translateX="48"
+      android:translateY="48">
+    <!-- 盾牌形状 -->
+    <path
+        android:fillColor="?attr/colorPrimary"
+        android:pathData="M12,1L3,5v6c0,5.55 3.84,10.74 9,12 5.16,-1.26 9,-6.45 9,-12L21,5l-9,-4z"/>
+    <!-- 对勾 -->
+    <path
+        android:fillColor="?attr/colorOnPrimary"
+        android:pathData="M10,17l-4,-4 1.41,-1.41L10,14.17l6.59,-6.59L18,9l-8,8z"/>
+  </group>
+</vector>
