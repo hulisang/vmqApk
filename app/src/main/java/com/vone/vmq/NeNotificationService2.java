@@ -93,20 +93,25 @@ public class NeNotificationService2 extends NotificationListenerService {
                     SharedPreferences read = getSharedPreferences("vone", MODE_PRIVATE);
                     host = read.getString("host", "");
                     key = read.getString("key", "");
+                    String appid = read.getString("appid", "");
 
                     //这里写入子线程需要做的工作
                     String t = String.valueOf(new Date().getTime());
                     String sign = md5(t + key);
 
-                    final String url = "http://" + host + "/api/monitor/heart?t=" + t + "&sign=" + sign;
-                    Request request = new Request.Builder().url(url).method("GET", null).build();
+                    String url = "http://" + host + "/api/v2/monitor/heart?t=" + t + "&sign=" + sign;
+                    if (appid != null && !appid.isEmpty()) {
+                        url += "&appid=" + appid;
+                    }
+                    final String finalUrl = url;
+                    Request request = new Request.Builder().url(finalUrl).post(okhttp3.RequestBody.create(null, "")).build();
                     Call call = Utils.getOkHttpClient().newCall(request);
                     call.enqueue(new Callback() {
                         @Override
                         public void onFailure(Call call, IOException e) {
                             // final String error = e.getMessage();
                             // Toast.makeText(getApplicationContext(), "心跳状态错误，请检查配置是否正确!" + error, Toast.LENGTH_LONG).show();
-                            foregroundHeart(url);
+                            foregroundHeart(finalUrl);
                         }
 
                         //请求成功执行的方法
@@ -123,7 +128,7 @@ public class NeNotificationService2 extends NotificationListenerService {
                             }
                             if (!response.isSuccessful()) {
                                 Log.d(TAG, "HTTP请求不成功，触发前台心跳");
-                                foregroundHeart(url);
+                                foregroundHeart(finalUrl);
                             } else {
                                 Log.d(TAG, "心跳服务请求成功");
                             }
@@ -242,20 +247,25 @@ public class NeNotificationService2 extends NotificationListenerService {
         SharedPreferences read = getSharedPreferences("vone", MODE_PRIVATE);
         host = read.getString("host", "");
         key = read.getString("key", "");
+        String appid = read.getString("appid", "");
 
         String t = String.valueOf(new Date().getTime());
 
         String sign = md5(type + "" + price + t + key);
-        final String url = "http://" + host + "/api/monitor/push?t=" + t + "&type=" + type + "&price=" + price + "&sign=" + sign;
+        String url = "http://" + host + "/api/v2/monitor/push?t=" + t + "&type=" + type + "&price=" + price + "&sign=" + sign;
+        if (appid != null && !appid.isEmpty()) {
+            url += "&appid=" + appid;
+        }
+        final String finalUrl = url;
 
-        sendBroadcastLog("准备推送订单: " + url);
-        Request request = new Request.Builder().url(url).get().build();
+        sendBroadcastLog("准备推送订单: " + finalUrl);
+        Request request = new Request.Builder().url(finalUrl).post(okhttp3.RequestBody.create(null, "")).build();
         Call call = Utils.getOkHttpClient().newCall(request);
         call.enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
                 sendBroadcastLog("推送失败: " + e.getMessage());
-                foregroundPost(url + "&force_push=true");
+                foregroundPost(finalUrl + "&force_push=true");
                 releaseWakeLock();
             }
 
@@ -265,7 +275,7 @@ public class NeNotificationService2 extends NotificationListenerService {
                     sendBroadcastLog("推送成功，服务器返回: " + response.body().string());
                 } else {
                     sendBroadcastLog("推送失败，服务器返回: " + response.body().string());
-                    foregroundPost(url + "&force_push=true");
+                    foregroundPost(finalUrl + "&force_push=true");
                 }
                 releaseWakeLock();
 

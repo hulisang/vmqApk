@@ -49,6 +49,14 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+
+    // 添加编译选项
+    tasks.withType(JavaCompile) {
+        options.compilerArgs << "-Xlint:-options"
+        options.encoding = "UTF-8"
+        options.fork = true
+        options.forkOptions.jvmArgs << "-Dfile.encoding=GBK"
+    }
     
     lint {
         abortOnError false
