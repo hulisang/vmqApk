@@ -30,6 +30,8 @@ import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.HapticFeedbackConstants;
@@ -61,9 +63,9 @@ import okhttp3.Response;
 public class MainActivity extends AppCompatActivity implements ThemeChangeListener {
 
     private final Handler handler = new Handler(Looper.getMainLooper());
-    private TextView txthost;
-    private TextView txtkey;
-    private TextView txtappid;
+    private com.google.android.material.textfield.TextInputEditText txthost;
+    private com.google.android.material.textfield.TextInputEditText txtkey;
+    private com.google.android.material.textfield.TextInputEditText txtappid;
     private TextView logTextView;
     private ScrollView logScrollView;
     private com.google.android.material.button.MaterialButton btnClearLogsInline;
@@ -121,12 +123,15 @@ public class MainActivity extends AppCompatActivity implements ThemeChangeListen
         
         setContentView(R.layout.activity_main);
 
-        txthost = (TextView) findViewById(R.id.txt_host);
-        txtkey = (TextView) findViewById(R.id.txt_key);
-        txtappid = (TextView) findViewById(R.id.txt_appid);
+        txthost = (com.google.android.material.textfield.TextInputEditText) findViewById(R.id.txt_host);
+        txtkey = (com.google.android.material.textfield.TextInputEditText) findViewById(R.id.txt_key);
+        txtappid = (com.google.android.material.textfield.TextInputEditText) findViewById(R.id.txt_appid);
         logTextView = (TextView) findViewById(R.id.log_text_view);
         logScrollView = (ScrollView) findViewById(R.id.log_scroll_view);
         btnClearLogsInline = (com.google.android.material.button.MaterialButton) findViewById(R.id.btn_clear_logs_inline);
+        
+        // 设置实时保存监听器
+        setupAutoSaveListeners();
         
         // 初始化清除按钮状态
         updateClearButtonState();
@@ -149,9 +154,9 @@ public class MainActivity extends AppCompatActivity implements ThemeChangeListen
         appid = read.getString("appid", "");
 
         if (host != null && key != null && host != "" && key != "") {
-            txthost.setText(" 通知地址：" + host);
-            txtkey.setText(" 通讯密钥：" + key);
-            txtappid.setText(" 商户ID：" + (appid != null && !appid.isEmpty() ? appid : "未设置"));
+            txthost.setText(host);
+            txtkey.setText(key);
+            txtappid.setText(appid != null && !appid.isEmpty() ? appid : "");
             isOk = true;
         }
 
@@ -193,6 +198,73 @@ public class MainActivity extends AppCompatActivity implements ThemeChangeListen
         if (performanceOptimizer != null) {
             performanceOptimizer.recordMainActivityReady();
         }
+    }
+
+    /**
+     * 设置实时保存监听器
+     */
+    private void setupAutoSaveListeners() {
+        // 通知地址的实时保存监听器
+        txthost.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                host = s.toString();
+                saveConfiguration();
+                appendLog("通知地址已更新: " + host);
+            }
+        });
+
+        // 通讯密钥的实时保存监听器
+        txtkey.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                key = s.toString();
+                saveConfiguration();
+                appendLog("通讯密钥已更新");
+            }
+        });
+
+        // 商户ID的实时保存监听器
+        txtappid.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                appid = s.toString();
+                saveConfiguration();
+                appendLog("商户ID已更新: " + appid);
+            }
+        });
+    }
+
+    /**
+     * 保存配置到SharedPreferences
+     */
+    private void saveConfiguration() {
+        SharedPreferences.Editor editor = getSharedPreferences("vone", MODE_PRIVATE).edit();
+        editor.putString("host", host != null ? host : "");
+        editor.putString("key", key != null ? key : "");
+        editor.putString("appid", appid != null ? appid : "");
+        editor.apply();
+        
+        // 更新isOk状态
+        isOk = (host != null && !host.isEmpty() && key != null && !key.isEmpty());
     }
 
     // 在Activity销毁时取消注册
@@ -270,10 +342,12 @@ public class MainActivity extends AppCompatActivity implements ThemeChangeListen
             return;
         }
 
-        // 如果有第三个参数，则为AppID
+        // 自动识别格式并提取AppID
+        String extractedAppid = "";
         if (tmp.length == 3 && !tmp[2].trim().isEmpty()) {
-            appid = tmp[2].trim();
+            extractedAppid = tmp[2].trim();
         }
+        appid = extractedAppid;
 
         String t = String.valueOf(new Date().getTime());
         String sign = md5(t + tmp[1]);
@@ -312,10 +386,10 @@ public class MainActivity extends AppCompatActivity implements ThemeChangeListen
                             return;
                         }
                         
-                        // 将扫描出的信息显示出来
-                        txthost.setText(" 通知地址：" + tmp[0]);
-                        txtkey.setText(" 通讯密钥：" + tmp[1]);
-                        txtappid.setText(" 商户ID：" + (appid != null && !appid.isEmpty() ? appid : "未设置"));
+                        // 将识别出的信息分别填入首页输入框
+                        txthost.setText(tmp[0]);
+                        txtkey.setText(tmp[1]);
+                        txtappid.setText(appid != null && !appid.isEmpty() ? appid : "");
                         host = tmp[0];
                         key = tmp[1];
 
@@ -326,8 +400,19 @@ public class MainActivity extends AppCompatActivity implements ThemeChangeListen
                         editor.apply(); // 使用apply()替代commit()
                         
                         isOk = true;
-                        Toast.makeText(MainActivity.this, "配置成功！", Toast.LENGTH_SHORT).show();
-                        appendLog("扫码配置成功: " + tmp[0]);
+                        
+                        // 显示识别结果提示
+                        String formatType = tmp.length == 3 ? "格式2（含AppID）" : "格式1（基础版）";
+                        String resultMessage = "扫码配置成功！识别为" + formatType + "\n";
+                        resultMessage += "通知地址：" + tmp[0] + "\n";
+                        resultMessage += "通讯密钥：" + tmp[1] + "\n";
+                        if (appid != null && !appid.isEmpty()) {
+                            resultMessage += "商户ID：" + appid;
+                        } else {
+                            resultMessage += "商户ID：未设置";
+                        }
+                        Toast.makeText(MainActivity.this, resultMessage, Toast.LENGTH_LONG).show();
+                        appendLog("扫码配置成功，格式：" + formatType);
                     });
                 } catch (Exception e) {
                     Log.e(TAG, "扫码配置心跳异常: " + e.getMessage(), e);
@@ -495,7 +580,7 @@ public class MainActivity extends AppCompatActivity implements ThemeChangeListen
     }
     
     /**
-     * 显示配置输入对话框 - 使用Material 3设计
+     * 显示配置输入对话框 - 使用Material 3设计，支持两种格式自动识别
      */
     private void showConfigurationInputDialog() {
         // 创建主容器
@@ -508,9 +593,9 @@ public class MainActivity extends AppCompatActivity implements ThemeChangeListen
             new com.google.android.material.textfield.TextInputLayout(this);
         inputLayout.setBoxBackgroundMode(com.google.android.material.textfield.TextInputLayout.BOX_BACKGROUND_OUTLINE);
         inputLayout.setHint("请输入配置数据");
-        inputLayout.setHelperText("格式：服务器地址/通讯密钥");
+        inputLayout.setHelperText("支持两种格式：\n1. 服务器地址/通讯密钥\n2. 服务器地址/通讯密钥/AppID");
         inputLayout.setCounterEnabled(true);
-        inputLayout.setCounterMaxLength(200);
+        inputLayout.setCounterMaxLength(300);
 
         // 创建配置数据EditText
         com.google.android.material.textfield.TextInputEditText inputServer =
@@ -519,22 +604,14 @@ public class MainActivity extends AppCompatActivity implements ThemeChangeListen
         inputServer.setSingleLine(true);
         inputLayout.addView(inputServer);
 
-        // 创建AppID输入布局
-        com.google.android.material.textfield.TextInputLayout appidLayout =
-            new com.google.android.material.textfield.TextInputLayout(this);
-        appidLayout.setBoxBackgroundMode(com.google.android.material.textfield.TextInputLayout.BOX_BACKGROUND_OUTLINE);
-        appidLayout.setHint("商户ID (AppID)");
-        appidLayout.setHelperText("可选，用于多用户系统");
-
-        // 创建AppID EditText
-        com.google.android.material.textfield.TextInputEditText inputAppid =
-            new com.google.android.material.textfield.TextInputEditText(this);
-        inputAppid.setInputType(android.text.InputType.TYPE_CLASS_TEXT);
-        inputAppid.setSingleLine(true);
-        if (appid != null && !appid.isEmpty()) {
-            inputAppid.setText(appid);
+        // 设置当前配置为默认值（如果存在）
+        if (host != null && !host.isEmpty() && key != null && !key.isEmpty()) {
+            String currentConfig = host + "/" + key;
+            if (appid != null && !appid.isEmpty()) {
+                currentConfig += "/" + appid;
+            }
+            inputServer.setText(currentConfig);
         }
-        appidLayout.addView(inputAppid);
 
         // 设置布局参数
         LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
@@ -542,24 +619,21 @@ public class MainActivity extends AppCompatActivity implements ThemeChangeListen
             LinearLayout.LayoutParams.WRAP_CONTENT);
         layoutParams.setMargins(0, 0, 0, 16);
         inputLayout.setLayoutParams(layoutParams);
-        appidLayout.setLayoutParams(layoutParams);
 
         // 添加到主容器
         mainLayout.addView(inputLayout);
-        mainLayout.addView(appidLayout);
         
         // 创建Material 3风格的对话框
         com.google.android.material.dialog.MaterialAlertDialogBuilder builder =
             new com.google.android.material.dialog.MaterialAlertDialogBuilder(this);
         builder.setTitle("手动配置")
-               .setMessage("请输入从网站获取的配置数据和商户ID")
+               .setMessage("请输入从网站获取的配置数据，系统将自动识别格式并分别填入对应的输入框")
                .setView(mainLayout)
                .setNegativeButton("取消", null);
         
         builder.setPositiveButton("确认", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int which) {
                 String scanResult = inputServer.getText().toString().trim();
-                String inputAppidValue = inputAppid.getText().toString().trim();
 
                 // 输入验证
                 if (scanResult.isEmpty()) {
@@ -573,7 +647,8 @@ public class MainActivity extends AppCompatActivity implements ThemeChangeListen
                     return;
                 }
 
-                // 如果有第三个参数，则为AppID
+                // 自动识别格式并提取AppID
+                String inputAppidValue = "";
                 if (tmp.length == 3 && !tmp[2].trim().isEmpty()) {
                     inputAppidValue = tmp[2].trim();
                 }
@@ -611,10 +686,11 @@ public class MainActivity extends AppCompatActivity implements ThemeChangeListen
 
                     return;
                 }
-                //将扫描出的信息显示出来
-                txthost.setText(" 通知地址：" + tmp[0]);
-                txtkey.setText(" 通讯密钥：" + tmp[1]);
-                txtappid.setText(" 商户ID：" + (inputAppidValue.isEmpty() ? "未设置" : inputAppidValue));
+                
+                // 将识别出的信息分别填入首页输入框
+                txthost.setText(tmp[0]);
+                txtkey.setText(tmp[1]);
+                txtappid.setText(inputAppidValue.isEmpty() ? "" : inputAppidValue);
                 host = tmp[0];
                 key = tmp[1];
                 appid = inputAppidValue;
@@ -624,6 +700,19 @@ public class MainActivity extends AppCompatActivity implements ThemeChangeListen
                 editor.putString("key", key);
                 editor.putString("appid", appid);
                 editor.apply(); // 使用apply()替代commit()
+                
+                // 显示识别结果提示
+                String formatType = tmp.length == 3 ? "格式2（含AppID）" : "格式1（基础版）";
+                String resultMessage = "配置成功！识别为" + formatType + "\n";
+                resultMessage += "通知地址：" + tmp[0] + "\n";
+                resultMessage += "通讯密钥：" + tmp[1] + "\n";
+                if (!inputAppidValue.isEmpty()) {
+                    resultMessage += "商户ID：" + inputAppidValue;
+                } else {
+                    resultMessage += "商户ID：未设置";
+                }
+                Toast.makeText(MainActivity.this, resultMessage, Toast.LENGTH_LONG).show();
+                appendLog("手动配置成功，格式：" + formatType);
 
             }
         });
@@ -1111,9 +1200,9 @@ public class MainActivity extends AppCompatActivity implements ThemeChangeListen
             });
 
             //将扫描出的信息显示出来
-            txthost.setText(" 通知地址：" + tmp[0]);
-            txtkey.setText(" 通讯密钥：" + tmp[1]);
-            txtappid.setText(" 商户ID：" + (appid != null && !appid.isEmpty() ? appid : "未设置"));
+            txthost.setText(tmp[0]);
+            txtkey.setText(tmp[1]);
+            txtappid.setText(appid != null && !appid.isEmpty() ? appid : "");
             host = tmp[0];
             key = tmp[1];
 

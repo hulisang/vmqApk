@@ -13,7 +13,7 @@
     <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="16dp"
+        android:layout_margin="12dp"
         app:cardCornerRadius="12dp"
         app:cardElevation="2dp"
         app:strokeWidth="0dp"
@@ -25,45 +25,83 @@
             android:orientation="vertical"
             android:padding="16dp">
 
-            <TextView
-                android:id="@+id/txt_host"
+            <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textSize="15sp"
-                android:textColor="?attr/colorOnSurface"
-                android:paddingTop="8dp"
-                android:paddingBottom="8dp"
-                android:text=" 通知地址：请扫码配置" />
+                android:layout_height="40dp"
+                android:layout_marginBottom="8dp"
+                app:boxBackgroundMode="filled"
+                app:hintEnabled="true"
+                app:hintAnimationEnabled="false"
+                app:expandedHintEnabled="false"
+                android:hint="通知地址：">
 
-            <com.google.android.material.divider.MaterialDivider
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginVertical="4dp" />
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/txt_host"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:textSize="15sp"
+                    android:singleLine="true"
+                    android:inputType="textUri"
+                    android:gravity="start|bottom"
+                    android:paddingStart="2dp"
+                    android:paddingEnd="12dp"
+                    android:paddingTop="12dp"
+                    android:paddingBottom="4dp"
+                    android:text="请扫码配置" />
 
-            <TextView
-                android:id="@+id/txt_key"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textSize="15sp"
-                android:textColor="?attr/colorOnSurface"
-                android:paddingTop="8dp"
-                android:paddingBottom="8dp"
-                android:text=" 通讯密钥：请扫码配置" />
+            </com.google.android.material.textfield.TextInputLayout>
 
-            <com.google.android.material.divider.MaterialDivider
+            <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginVertical="4dp" />
+                android:layout_height="40dp"
+                android:layout_marginBottom="8dp"
+                app:boxBackgroundMode="filled"
+                app:hintEnabled="true"
+                app:hintAnimationEnabled="false"
+                app:expandedHintEnabled="false"
+                android:hint="通讯密钥：">
 
-            <TextView
-                android:id="@+id/txt_appid"
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/txt_key"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:textSize="15sp"
+                    android:singleLine="true"
+                    android:inputType="text"
+                    android:gravity="start|bottom"
+                    android:paddingStart="2dp"
+                    android:paddingEnd="12dp"
+                    android:paddingTop="12dp"
+                    android:paddingBottom="4dp"
+                    android:text="请扫码配置" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textSize="15sp"
-                android:textColor="?attr/colorOnSurface"
-                android:paddingTop="8dp"
-                android:paddingBottom="8dp"
-                android:text=" 商户ID：未设置" />
+                android:layout_height="40dp"
+                app:boxBackgroundMode="filled"
+                app:hintEnabled="true"
+                app:hintAnimationEnabled="false"
+                app:expandedHintEnabled="false"
+                android:hint="商户ID：">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/txt_appid"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:textSize="15sp"
+                    android:singleLine="true"
+                    android:inputType="text"
+                    android:gravity="start|bottom"
+                    android:paddingStart="2dp"
+                    android:paddingEnd="12dp"
+                    android:paddingTop="12dp"
+                    android:paddingBottom="4dp"
+                    android:text="未设置" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 
@@ -71,8 +109,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp"
-        android:paddingBottom="8dp">
+        android:padding="8dp"
+        android:paddingBottom="4dp">
         
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_qrcode"
@@ -133,7 +171,7 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:layout_margin="16dp"
+        android:layout_margin="12dp"
         app:cardCornerRadius="12dp"
         app:cardElevation="2dp"
         app:strokeWidth="0dp"

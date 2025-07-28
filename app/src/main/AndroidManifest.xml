@@ -23,6 +23,16 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
+    <!-- 声明需要查询的应用包名，解决Android 10+包可见性限制 -->
+    <queries>
+        <!-- 支付宝 -->
+        <package android:name="com.eg.android.AlipayGphone" />
+        <!-- 微信 -->
+        <package android:name="com.tencent.mm" />
+        <!-- 企业微信 -->
+        <package android:name="com.tencent.wework" />
+    </queries>
+
     <application
         android:name="com.vone.vmq.App"
         android:allowBackup="true"
