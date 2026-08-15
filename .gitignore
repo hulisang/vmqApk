@@ -8,5 +8,6 @@
 .externalNativeBuild
 /app/build
 *.jks
+*.keystore
 /app/authkey.jks
 /.kiro
