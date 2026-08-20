@@ -13,7 +13,6 @@ import android.os.PowerManager;
 import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
 import androidx.core.app.NotificationCompat;
-import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
 import android.content.pm.PackageManager;
@@ -25,11 +24,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -95,8 +91,8 @@ public class NeNotificationService2 extends NotificationListenerService {
                     key = read.getString("key", "");
 
                     //这里写入子线程需要做的工作
-                    String t = String.valueOf(new Date().getTime());
-                    String sign = md5(t + key);
+                    String t = MonitorSign.timestamp();
+                    String sign = MonitorSign.heartbeat(t, key);
 
                     final String url = "http://" + host + "/api/monitor/heart?t=" + t + "&sign=" + sign;
                     Request request = new Request.Builder().url(url).method("GET", null).build();
@@ -243,10 +239,13 @@ public class NeNotificationService2 extends NotificationListenerService {
         host = read.getString("host", "");
         key = read.getString("key", "");
 
-        String t = String.valueOf(new Date().getTime());
+        String t = MonitorSign.timestamp();
+        String typeText = String.valueOf(type);
+        // 金额文本必须与参与签名的文本完全一致，否则服务端按查询参数重算出的签名不会相等
+        String priceText = MonitorSign.priceText(price);
 
-        String sign = md5(type + "" + price + t + key);
-        final String url = "http://" + host + "/api/monitor/push?t=" + t + "&type=" + type + "&price=" + price + "&sign=" + sign;
+        String sign = MonitorSign.push(typeText, priceText, t, key);
+        final String url = "http://" + host + "/api/monitor/push?t=" + t + "&type=" + typeText + "&price=" + priceText + "&sign=" + sign;
 
         sendBroadcastLog("准备推送订单: " + url);
         Request request = new Request.Builder().url(url).get().build();
@@ -372,29 +371,6 @@ public class NeNotificationService2 extends NotificationListenerService {
         } else {
             return ss.get(ss.size() - 1);
         }
-    }
-
-    public static String md5(String string) {
-        if (TextUtils.isEmpty(string)) {
-            return "";
-        }
-        MessageDigest md5 = null;
-        try {
-            md5 = MessageDigest.getInstance("MD5");
-            byte[] bytes = md5.digest(string.getBytes());
-            StringBuilder result = new StringBuilder();
-            for (byte b : bytes) {
-                String temp = Integer.toHexString(b & 0xff);
-                if (temp.length() == 1) {
-                    temp = "0" + temp;
-                }
-                result.append(temp);
-            }
-            return result.toString();
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        }
-        return "";
     }
 
     private void sendBroadcastLog(String logMessage) {

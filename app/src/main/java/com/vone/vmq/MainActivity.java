@@ -49,9 +49,6 @@ import com.vone.vmq.util.Constant;
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.Date;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -265,8 +262,8 @@ public class MainActivity extends AppCompatActivity implements ThemeChangeListen
             return;
         }
 
-        String t = String.valueOf(new Date().getTime());
-        String sign = md5(t + tmp[1]);
+        String t = MonitorSign.timestamp();
+        String sign = MonitorSign.heartbeat(t, tmp[1]);
 
         Request request = new Request.Builder()
             .url("http://" + tmp[0] + "/api/monitor/heart?t=" + t + "&sign=" + sign)
@@ -531,8 +528,8 @@ public class MainActivity extends AppCompatActivity implements ThemeChangeListen
                     return;
                 }
 
-                String t = String.valueOf(new Date().getTime());
-                String sign = md5(t + tmp[1]);
+                String t = MonitorSign.timestamp();
+                String sign = MonitorSign.heartbeat(t, tmp[1]);
 
                 Request request = new Request.Builder().url("http://" + tmp[0] + "/api/monitor/heart?t=" + t + "&sign=" + sign).method("GET", null).build();
                 Call call = Utils.getOkHttpClient().newCall(request);
@@ -588,8 +585,8 @@ public class MainActivity extends AppCompatActivity implements ThemeChangeListen
         }
 
         appendLog("开始检测心跳...");
-        String t = String.valueOf(new Date().getTime());
-        String sign = md5(t + key);
+        String t = MonitorSign.timestamp();
+        String sign = MonitorSign.heartbeat(t, key);
 
         Request request = new Request.Builder().url("http://" + host + "/api/monitor/heart?t=" + t + "&sign=" + sign).method("GET", null).build();
         Call call = Utils.getOkHttpClient().newCall(request);
@@ -968,29 +965,6 @@ public class MainActivity extends AppCompatActivity implements ThemeChangeListen
         }
     }
 
-    public static String md5(String string) {
-        if (TextUtils.isEmpty(string)) {
-            return "";
-        }
-        MessageDigest md5 = null;
-        try {
-            md5 = MessageDigest.getInstance("MD5");
-            byte[] bytes = md5.digest(string.getBytes());
-            StringBuilder result = new StringBuilder();
-            for (byte b : bytes) {
-                String temp = Integer.toHexString(b & 0xff);
-                if (temp.length() == 1) {
-                    temp = "0" + temp;
-                }
-                result.append(temp);
-            }
-            return result.toString();
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        }
-        return "";
-    }
-    
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -1018,8 +992,8 @@ public class MainActivity extends AppCompatActivity implements ThemeChangeListen
                 return;
             }
 
-            String t = String.valueOf(new Date().getTime());
-            String sign = md5(t + tmp[1]);
+            String t = MonitorSign.timestamp();
+            String sign = MonitorSign.heartbeat(t, tmp[1]);
 
             Request request = new Request.Builder().url("http://" + tmp[0] + "/api/monitor/heart?t=" + t + "&sign=" + sign).method("GET", null).build();
             Call call = Utils.getOkHttpClient().newCall(request);
