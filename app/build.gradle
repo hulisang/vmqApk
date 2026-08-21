@@ -50,6 +50,11 @@ android {
         targetCompatibility JavaVersion.VERSION_1_8
     }
     
+    testOptions {
+        // Robolectric 全量单元测试需要加载应用 Manifest 与已编译资源，才能验证真实启动图标。
+        unitTests.includeAndroidResources = true
+    }
+
     lint {
         abortOnError false
     }

@@ -6,6 +6,8 @@ import android.os.Build;
 import android.util.Log;
 import android.widget.Toast;
 
+import androidx.core.content.ContextCompat;
+
 /**
  * 启动画面错误处理器
  * 处理启动画面相关的各种错误情况并提供恢复机制
@@ -140,9 +142,10 @@ public class SplashScreenErrorHandler {
      */
     private boolean tryUseDefaultResources() {
         try {
-            // 检查系统默认图标是否可用
-            int defaultIcon = android.R.drawable.sym_def_app_icon;
-            context.getResources().getDrawable(defaultIcon, context.getTheme());
+            // 通过 AndroidX 兼容 API 验证默认图标，兼容旧系统和 Robolectric 测试环境。
+            if (ContextCompat.getDrawable(context, android.R.drawable.sym_def_app_icon) == null) {
+                return false;
+            }
             
             diagnostic.logSplashScreenInfo("默认资源验证成功");
             return true;

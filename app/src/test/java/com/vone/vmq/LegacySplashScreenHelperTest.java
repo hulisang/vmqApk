@@ -101,12 +101,7 @@ public class LegacySplashScreenHelperTest {
         assertEquals("Android 6应该返回800ms", 800, duration);
     }
 
-    @Test
-    @Config(sdk = Build.VERSION_CODES.LOLLIPOP)
-    public void testGetRecommendedSplashDuration_Android5() {
-        int duration = LegacySplashScreenHelper.getRecommendedSplashDuration(context);
-        assertEquals("Android 5应该返回1200ms", 1200, duration);
-    }
+    // 应用 minSdk 为 23，Android 5（API 21）不在支持范围内；启用真实资源与清单后该场景无法运行，故不再保留该用例。
 
     @Test
     public void testIsTransitionInProgress() {

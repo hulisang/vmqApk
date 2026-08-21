@@ -102,13 +102,20 @@ public class ForegroundServer extends Service {
             if (jsonObject.optBoolean("show", true)) {
                 startLockActivity(this.getString(R.string.app_is_post));
             }
-            tryPushByUrl(url, jsonObject.optInt("try_count", 1));
+            tryPushByUrl(
+                    url,
+                    jsonObject.optInt("try_count", 1),
+                    MonitorResponse.normalizeForegroundRetryDelayMillis(
+                            jsonObject.optLong("retry_after_millis", 0L),
+                            MIN_SHOW_TIME
+                    )
+            );
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    private void tryPushByUrl(final String url, final int count) {
+    private void tryPushByUrl(final String url, final int count, final long retryDelayMillis) {
         if (count <= 0) {
             handler.post(new Runnable() {
                 @Override
@@ -118,7 +125,7 @@ public class ForegroundServer extends Service {
             });
             return;
         }
-        // 进行一个短暂的延迟再通知过去
+        // 失败后按服务端允许的最短间隔重试，避免 429 期间持续撞击限流器。
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
@@ -127,38 +134,42 @@ public class ForegroundServer extends Service {
                 call.enqueue(new Callback() {
                     @Override
                     public void onFailure(Call call, IOException e) {
-                        Log.d("ForegroundServer", "onResponse  push: 请求失败");
-                        tryPushByUrl(url, count - 1);
+                        Log.d("ForegroundServer", "前台推送请求失败: " + e.getMessage());
+                        tryPushByUrl(url, count - 1, MIN_SHOW_TIME);
                     }
 
                     @Override
                     public void onResponse(Call call, Response response) throws IOException {
                         try {
-                            String responseBody = response.body().string();
-                            Log.d("ForegroundServer", "前台推送返回数据: " + responseBody);
-                            Log.d("ForegroundServer", "前台推送HTTP状态码: " + response.code());
-                            Log.d("ForegroundServer", "前台推送isSuccessful: " + response.isSuccessful());
+                            MonitorResponse result = MonitorResponse.from(response);
+                            Log.d("ForegroundServer", "前台推送结果: " + result.summary());
+                            if (!result.isSuccessful()) {
+                                Log.d("ForegroundServer", "前台推送未被服务端接受，重试");
+                                tryPushByUrl(
+                                        url,
+                                        count - 1,
+                                        result.foregroundRetryDelayMillis(MIN_SHOW_TIME)
+                                );
+                                return;
+                            }
+
+                            Log.d("ForegroundServer", "前台推送成功，退出前台");
+                            handler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    NeNotificationService2.exitForeground(App.getContext());
+                                }
+                            });
                         } catch (Exception e) {
                             Log.e("ForegroundServer", "前台推送响应解析异常: " + e.getMessage(), e);
-                            e.printStackTrace();
+                            tryPushByUrl(url, count - 1, MIN_SHOW_TIME);
                         } finally {
-                            if (!response.isSuccessful()) {
-                                Log.d("ForegroundServer", "前台推送HTTP请求不成功，重试");
-                                tryPushByUrl(url, count - 1);
-                            } else {
-                                Log.d("ForegroundServer", "前台推送请求成功，退出前台");
-                                handler.post(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        NeNotificationService2.exitForeground(App.getContext());
-                                    }
-                                });
-                            }
+                            response.close();
                         }
                     }
                 });
             }
-        }, MIN_SHOW_TIME);
+        }, MonitorResponse.normalizeForegroundRetryDelayMillis(retryDelayMillis, MIN_SHOW_TIME));
     }
 
     /**

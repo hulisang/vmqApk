@@ -30,16 +30,21 @@ import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import android.text.Editable;
 import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.HapticFeedbackConstants;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.material.textfield.TextInputEditText;
 import com.google.zxing.activity.CaptureActivity;
 
 import com.vone.qrcode.BuildConfig;
@@ -58,8 +63,8 @@ import okhttp3.Response;
 public class MainActivity extends AppCompatActivity implements ThemeChangeListener {
 
     private final Handler handler = new Handler(Looper.getMainLooper());
-    private TextView txthost;
-    private TextView txtkey;
+    private TextInputEditText edtHost;
+    private TextInputEditText edtKey;
     private TextView logTextView;
     private ScrollView logScrollView;
     private com.google.android.material.button.MaterialButton btnClearLogsInline;
@@ -116,14 +121,43 @@ public class MainActivity extends AppCompatActivity implements ThemeChangeListen
         
         setContentView(R.layout.activity_main);
 
-        txthost = (TextView) findViewById(R.id.txt_host);
-        txtkey = (TextView) findViewById(R.id.txt_key);
+        edtHost = (TextInputEditText) findViewById(R.id.edt_host);
+        edtKey = (TextInputEditText) findViewById(R.id.edt_key);
         logTextView = (TextView) findViewById(R.id.log_text_view);
         logScrollView = (ScrollView) findViewById(R.id.log_scroll_view);
         btnClearLogsInline = (com.google.android.material.button.MaterialButton) findViewById(R.id.btn_clear_logs_inline);
         
         // 初始化清除按钮状态
         updateClearButtonState();
+
+        // 读入保存的配置数据并显示在输入框中
+        SharedPreferences read = getSharedPreferences("vone", MODE_PRIVATE);
+        host = read.getString("host", "");
+        key = read.getString("key", "");
+
+        if (!TextUtils.isEmpty(host)) {
+            edtHost.setText(host);
+        }
+        if (!TextUtils.isEmpty(key)) {
+            edtKey.setText(key);
+        }
+        isOk = !TextUtils.isEmpty(host) && !TextUtils.isEmpty(key);
+
+        // 绑定输入监听器，实现编辑框实时保存
+        TextWatcher realtimeSaver = new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                saveConfigRealtime();
+            }
+        };
+        edtHost.addTextChangedListener(realtimeSaver);
+        edtKey.addTextChangedListener(realtimeSaver);
 
         //检测通知使用权是否启用
         if (!isNotificationListenersEnabled()) {
@@ -135,16 +169,6 @@ public class MainActivity extends AppCompatActivity implements ThemeChangeListen
         //重启监听服务
         if (!NeNotificationService2.isRunning) {
             toggleNotificationListenerService(this);
-        }
-        //读入保存的配置数据并显示
-        SharedPreferences read = getSharedPreferences("vone", MODE_PRIVATE);
-        host = read.getString("host", "");
-        key = read.getString("key", "");
-
-        if (host != null && key != null && host != "" && key != "") {
-            txthost.setText(" 通知地址：" + host);
-            txtkey.setText(" 通讯密钥：" + key);
-            isOk = true;
         }
 
 
@@ -185,6 +209,64 @@ public class MainActivity extends AppCompatActivity implements ThemeChangeListen
         if (performanceOptimizer != null) {
             performanceOptimizer.recordMainActivityReady();
         }
+    }
+
+    /**
+     * 实时持久化保存配置并更新内存状态
+     */
+    private void saveConfigRealtime() {
+        if (edtHost == null || edtKey == null) return;
+
+        String inputHost = edtHost.getText() != null ? edtHost.getText().toString().trim() : "";
+        String inputKey = edtKey.getText() != null ? edtKey.getText().toString().trim() : "";
+
+        // 容错：自动过滤用户不小心输入的 http:// 或 https:// 前缀及末尾斜杠
+        if (inputHost.startsWith("http://")) {
+            inputHost = inputHost.substring(7);
+        } else if (inputHost.startsWith("https://")) {
+            inputHost = inputHost.substring(8);
+        }
+        if (inputHost.endsWith("/")) {
+            inputHost = inputHost.substring(0, inputHost.length() - 1);
+        }
+
+        host = inputHost;
+        key = inputKey;
+        isOk = !TextUtils.isEmpty(host) && !TextUtils.isEmpty(key);
+
+        SharedPreferences.Editor editor = getSharedPreferences("vone", MODE_PRIVATE).edit();
+        editor.putString("host", host);
+        editor.putString("key", key);
+        editor.apply();
+    }
+
+    /**
+     * 点击编辑框外部区域时自动清除焦点并收起软键盘（离开编辑模式）
+     */
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent ev) {
+        if (ev.getAction() == MotionEvent.ACTION_DOWN) {
+            View currentFocus = getCurrentFocus();
+            if (currentFocus instanceof EditText) {
+                int[] location = new int[2];
+                currentFocus.getLocationOnScreen(location);
+                float x = ev.getRawX();
+                float y = ev.getRawY();
+                int left = location[0];
+                int top = location[1];
+                int right = left + currentFocus.getWidth();
+                int bottom = top + currentFocus.getHeight();
+
+                if (x < left || x > right || y < top || y > bottom) {
+                    currentFocus.clearFocus();
+                    InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                    if (imm != null) {
+                        imm.hideSoftInputFromWindow(currentFocus.getWindowToken(), 0);
+                    }
+                }
+            }
+        }
+        return super.dispatchTouchEvent(ev);
     }
 
     // 在Activity销毁时取消注册
@@ -283,11 +365,20 @@ public class MainActivity extends AppCompatActivity implements ThemeChangeListen
             @Override
             public void onResponse(Call call, Response response) throws IOException {
                 try {
-                    String responseBody = response.body().string();
-                    Log.d(TAG, "扫码配置心跳返回: " + responseBody);
-                    Log.d(TAG, "扫码配置HTTP状态码: " + response.code());
+                    MonitorResponse result = MonitorResponse.from(response);
+                    Log.d(TAG, "扫码配置心跳结果: " + result.summary());
                     
                     handler.post(() -> {
+                        if (!result.isSuccessful()) {
+                            Toast.makeText(
+                                    MainActivity.this,
+                                    "配置验证失败：" + result.summary(),
+                                    Toast.LENGTH_LONG
+                            ).show();
+                            appendLog("扫码配置验证失败: " + result.summary());
+                            return;
+                        }
+
                         if (tmp[0].contains("localhost")) {
                             Toast.makeText(MainActivity.this, 
                                 "配置信息错误，本机调试请访问 本机局域网IP:8080(如192.168.1.101:8080) 获取配置信息进行配置!", 
@@ -295,17 +386,11 @@ public class MainActivity extends AppCompatActivity implements ThemeChangeListen
                             return;
                         }
                         
-                        // 将扫描出的信息显示出来
-                        txthost.setText(" 通知地址：" + tmp[0]);
-                        txtkey.setText(" 通讯密钥：" + tmp[1]);
+                        // 将扫描出的信息更新到输入框（触发自动保存）
+                        if (edtHost != null) edtHost.setText(tmp[0]);
+                        if (edtKey != null) edtKey.setText(tmp[1]);
                         host = tmp[0];
                         key = tmp[1];
-
-                        SharedPreferences.Editor editor = getSharedPreferences("vone", MODE_PRIVATE).edit();
-                        editor.putString("host", host);
-                        editor.putString("key", key);
-                        editor.apply(); // 使用apply()替代commit()
-                        
                         isOk = true;
                         Toast.makeText(MainActivity.this, "配置成功！", Toast.LENGTH_SHORT).show();
                         appendLog("扫码配置成功: " + tmp[0]);
@@ -316,6 +401,8 @@ public class MainActivity extends AppCompatActivity implements ThemeChangeListen
                         Toast.makeText(MainActivity.this, "配置处理异常", Toast.LENGTH_SHORT).show();
                         appendLog("扫码配置处理异常: " + e.getMessage());
                     });
+                } finally {
+                    response.close();
                 }
             }
         });
@@ -557,16 +644,12 @@ public class MainActivity extends AppCompatActivity implements ThemeChangeListen
 
                     return;
                 }
-                //将扫描出的信息显示出来
-                txthost.setText(" 通知地址：" + tmp[0]);
-                txtkey.setText(" 通讯密钥：" + tmp[1]);
+                // 将扫描出的信息更新到输入框（自动触发实时保存）
+                if (edtHost != null) edtHost.setText(tmp[0]);
+                if (edtKey != null) edtKey.setText(tmp[1]);
                 host = tmp[0];
                 key = tmp[1];
-
-                SharedPreferences.Editor editor = getSharedPreferences("vone", MODE_PRIVATE).edit();
-                editor.putString("host", host);
-                editor.putString("key", key);
-                editor.apply(); // 使用apply()替代commit()
+                isOk = true;
 
             }
         });
@@ -1017,16 +1100,12 @@ public class MainActivity extends AppCompatActivity implements ThemeChangeListen
                 }
             });
 
-            //将扫描出的信息显示出来
-            txthost.setText(" 通知地址：" + tmp[0]);
-            txtkey.setText(" 通讯密钥：" + tmp[1]);
+            // 将扫描出的信息更新到输入框（自动触发实时保存）
+            if (edtHost != null) edtHost.setText(tmp[0]);
+            if (edtKey != null) edtKey.setText(tmp[1]);
             host = tmp[0];
             key = tmp[1];
-
-            SharedPreferences.Editor editor = getSharedPreferences("vone", MODE_PRIVATE).edit();
-            editor.putString("host", host);
-            editor.putString("key", key);
-            editor.apply(); // 使用apply()替代commit()
+            isOk = true;
         }
     }
 

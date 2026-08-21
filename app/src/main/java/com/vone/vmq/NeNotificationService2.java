@@ -100,28 +100,27 @@ public class NeNotificationService2 extends NotificationListenerService {
                     call.enqueue(new Callback() {
                         @Override
                         public void onFailure(Call call, IOException e) {
-                            // final String error = e.getMessage();
-                            // Toast.makeText(getApplicationContext(), "心跳状态错误，请检查配置是否正确!" + error, Toast.LENGTH_LONG).show();
-                            foregroundHeart(url);
+                            Log.w(TAG, "心跳请求失败: " + e.getMessage());
+                            foregroundHeart(url, 0L);
                         }
 
-                        //请求成功执行的方法
+                        // HTTP 200 仍可能包含业务错误；必须同步校验 PHP 兼容 envelope 的 code。
                         @Override
                         public void onResponse(Call call, Response response) throws IOException {
                             try {
-                                String responseBody = response.body().string();
-                                Log.d(TAG, "心跳服务返回数据: " + responseBody);
-                                Log.d(TAG, "HTTP状态码: " + response.code());
-                                Log.d(TAG, "isSuccessful: " + response.isSuccessful());
+                                MonitorResponse result = MonitorResponse.from(response);
+                                Log.d(TAG, "心跳服务结果: " + result.summary());
+                                if (!result.isSuccessful()) {
+                                    Log.w(TAG, "心跳未被服务端接受，触发前台重试");
+                                    foregroundHeart(url, result.foregroundRetryDelayMillis(0L));
+                                } else {
+                                    Log.d(TAG, "心跳服务请求成功");
+                                }
                             } catch (Exception e) {
                                 Log.e(TAG, "心跳服务解析异常: " + e.getMessage(), e);
-                                e.printStackTrace();
-                            }
-                            if (!response.isSuccessful()) {
-                                Log.d(TAG, "HTTP请求不成功，触发前台心跳");
-                                foregroundHeart(url);
-                            } else {
-                                Log.d(TAG, "心跳服务请求成功");
+                                foregroundHeart(url, 0L);
+                            } finally {
+                                response.close();
                             }
                         }
                     });
@@ -247,40 +246,49 @@ public class NeNotificationService2 extends NotificationListenerService {
         String sign = MonitorSign.push(typeText, priceText, t, key);
         final String url = "http://" + host + "/api/monitor/push?t=" + t + "&type=" + typeText + "&price=" + priceText + "&sign=" + sign;
 
-        sendBroadcastLog("准备推送订单: " + url);
+        // 签名属于短期 bearer 凭据，日志只保留脱敏后的请求路径。
+        sendBroadcastLog("准备推送订单: " + Utils.redactMonitorUrl(url));
         Request request = new Request.Builder().url(url).get().build();
         Call call = Utils.getOkHttpClient().newCall(request);
         call.enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
                 sendBroadcastLog("推送失败: " + e.getMessage());
-                foregroundPost(url + "&force_push=true");
+                foregroundPost(url, 0L);
                 releaseWakeLock();
             }
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
-                if (response.isSuccessful()) {
-                    sendBroadcastLog("推送成功，服务器返回: " + response.body().string());
-                } else {
-                    sendBroadcastLog("推送失败，服务器返回: " + response.body().string());
-                    foregroundPost(url + "&force_push=true");
+                try {
+                    MonitorResponse result = MonitorResponse.from(response);
+                    if (result.isSuccessful()) {
+                        sendBroadcastLog("推送成功，服务器结果: " + result.summary());
+                    } else {
+                        sendBroadcastLog("推送未被服务端接受: " + result.summary());
+                        foregroundPost(url, result.foregroundRetryDelayMillis(0L));
+                    }
+                } catch (Exception e) {
+                    sendBroadcastLog("推送响应解析失败: " + e.getMessage());
+                    foregroundPost(url, 0L);
+                } finally {
+                    response.close();
+                    releaseWakeLock();
                 }
-                releaseWakeLock();
-
             }
         });
     }
 
-    private void foregroundHeart(String url) {
+    private void foregroundHeart(String url, long retryAfterMillis) {
         final Context context = NeNotificationService2.this;
         if (isRunning) {
             final JSONObject extraJson = new JSONObject();
             try {
                 extraJson.put("url", url);
                 extraJson.put("show", false);
+                extraJson.put("retry_after_millis", retryAfterMillis);
             } catch (JSONException jsonException) {
-                jsonException.printStackTrace();
+                Log.w(TAG, "编码心跳前台重试参数失败", jsonException);
             }
             handler.post(new Runnable() {
                 @Override
@@ -294,17 +302,18 @@ public class NeNotificationService2 extends NotificationListenerService {
     }
 
     /**
-     * 当通知失败的时候，前台强制通知
+     * 当通知失败的时候，进入前台服务按受控间隔重试。
      */
-    private void foregroundPost(String url) {
+    private void foregroundPost(String url, long retryAfterMillis) {
         final Context context = NeNotificationService2.this;
         if (isRunning) {
             final JSONObject extraJson = new JSONObject();
             try {
                 extraJson.put("url", url);
                 extraJson.put("try_count", 5);
+                extraJson.put("retry_after_millis", retryAfterMillis);
             } catch (JSONException jsonException) {
-                jsonException.printStackTrace();
+                Log.w(TAG, "编码推送前台重试参数失败", jsonException);
             }
             handler.post(new Runnable() {
                 @Override

@@ -323,6 +323,14 @@ class Utils {
         }
     }
 
+    static String redactMonitorUrl(String rawUrl) {
+        if (rawUrl == null || rawUrl.isEmpty()) {
+            return "";
+        }
+        // HMAC 签名属于短期 bearer 凭据，任何日志输出前都必须替换其查询参数值。
+        return rawUrl.replaceAll("([?&]sign=)[^&#]*", "$1[redacted]");
+    }
+
     /**
      * 日志拦截器 - 记录网络请求详情，便于调试
      */
@@ -332,18 +340,17 @@ class Utils {
         @Override
         public Response intercept(Chain chain) throws IOException {
             Request request = chain.request();
+            String safeUrl = redactMonitorUrl(request.url().toString());
             long startTime = System.currentTimeMillis();
             
-            android.util.Log.d(TAG, "发送请求: " + request.url());
+            android.util.Log.d(TAG, "发送请求: " + safeUrl);
             android.util.Log.d(TAG, "请求方法: " + request.method());
             
             Response response;
-            boolean success = false;
             try {
                 response = chain.proceed(request);
-                success = response.isSuccessful();
             } catch (Exception e) {
-                android.util.Log.e(TAG, "请求失败: " + request.url() + " - " + e.getMessage());
+                android.util.Log.e(TAG, "请求失败: " + safeUrl + " - " + e.getMessage());
                 throw e;
             }
             

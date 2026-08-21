@@ -6,6 +6,10 @@ import android.os.Build;
 import android.util.Log;
 import android.util.TypedValue;
 
+import androidx.core.content.ContextCompat;
+
+import com.vone.qrcode.R;
+
 /**
  * 启动画面诊断工具实现类
  * 提供启动画面配置检查和问题诊断的具体实现
@@ -55,18 +59,13 @@ public class SplashScreenDiagnosticImpl implements SplashScreenDiagnostic {
     @Override
     public boolean validateSplashScreenResources() {
         try {
-            // 检查启动画面图标资源
-            int iconResId = resources.getIdentifier("ic_splash_screen", "drawable", context.getPackageName());
-            if (iconResId == 0) {
+            // 直接引用已编译资源，避免运行包名与源码包名不一致时动态查询失败。
+            if (ContextCompat.getDrawable(context, R.drawable.ic_splash_screen) == null) {
                 logSplashScreenInfo("启动画面图标资源不存在: ic_splash_screen");
                 return false;
             }
-            
-            // 尝试加载资源以验证其有效性
-            resources.getDrawable(iconResId, context.getTheme());
             logSplashScreenInfo("启动画面图标资源验证成功");
             return true;
-            
         } catch (Resources.NotFoundException e) {
             logSplashScreenInfo("启动画面资源验证失败: " + e.getMessage());
             return false;
