@@ -22,7 +22,8 @@ appops set com.vone.qrcode RECEIVE_SENSITIVE_NOTIFICATIONS allow
 
 1. 支持开机自启(国内定制系统需手动开启自启权限)
 2. 支持post失败后再重试一次(这次重试是强制亮屏的)
-3. ios设备可以找一台安卓设备-》绑定店员进行收款通知了
+4. 支持 v2 HMAC-SHA-256 签名校验与防重放时间戳窗口
+5. 集成 Material You 风格状态卡片与实时诊断能力
 
 优化功能：
 
