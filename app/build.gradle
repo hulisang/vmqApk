@@ -9,7 +9,8 @@ android {
         minSdk 23
         targetSdk 34
         versionCode 3
-        versionName "3.0"
+        // 3.1 为首个正式签名版本（测试钥已弃用，老测试用户需卸载重装）
+        versionName "3.1"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
     
