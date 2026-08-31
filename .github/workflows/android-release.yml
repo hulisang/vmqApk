@@ -1,0 +1,67 @@
+name: Build and release Android APK
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: "为版本创建一个标签，例如 V3.1"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+env:
+  JAVA_VERSION: "17"
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # AGP 8.2 要求 JDK 17；runner 自带 Android SDK，无需配置 sdk.dir
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: gradle
+
+      # 从仓库 Secrets 还原签名库。必须与历史发布使用同一把 keystore，
+      # 否则老用户无法覆盖安装升级。
+      - name: Restore signing keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: |
+          set -euo pipefail
+          test -n "$KEYSTORE_BASE64" || { echo "缺少 Secrets: KEYSTORE_BASE64"; exit 1; }
+          printf '%s' "$KEYSTORE_BASE64" | base64 -d > app/vmqfox.keystore
+
+      # app/build.gradle 在配置期从根目录 local.properties 读取签名参数，
+      # CI 上该文件不存在会直接失败，故在此按 Secrets 生成（不回显口令）。
+      - name: Generate local.properties
+        env:
+          KEYSTORE_ALIAS: ${{ secrets.KEYSTORE_ALIAS }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+        run: |
+          set -euo pipefail
+          test -n "$KEYSTORE_PASSWORD" || { echo "缺少 Secrets: KEYSTORE_PASSWORD"; exit 1; }
+          cat > local.properties <<EOF
+          STORE_FILE_NAME=vmqfox.keystore
+          STORE_ALIAS=${KEYSTORE_ALIAS}
+          KEY_PASSWORD=${KEYSTORE_PASSWORD}
+          EOF
+
+      - name: Build release APK
+        run: ./gradlew --no-daemon assembleRelease
+
+      # 产物路径固定为 app-release.apk，与历史 Release 资产同名，
+      # overwrite_files 允许修订同一 tag 时直接替换旧包。
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.tag_name }}
+          overwrite_files: true
+          files: app/build/outputs/apk/release/app-release.apk
